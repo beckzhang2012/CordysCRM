@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <resultMap id="BaseResultMap" type="cn.cordys.crm.customer.domain.CustomerTag">
+        <id column="id" property="id"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="tag_name" property="tagName"/>
+        <result column="organization_id" property="organizationId"/>
+        <result column="create_user" property="createUser"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_user" property="updateUser"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="getTagsByCustomerId" resultType="java.lang.String">
+        SELECT tag_name
+        FROM customer_tag
+        WHERE customer_id = #{customerId}
+        AND delete_flag = 0
+    </select>
+
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO customer_tag (id, customer_id, tag_name, organization_id, create_user, create_time)
+        VALUES
+        <foreach collection="tags" item="tag" separator=",">
+            (#{tag.id}, #{tag.customerId}, #{tag.tagName}, #{tag.organizationId}, #{tag.createUser}, #{tag.createTime})
+        </foreach>
+    </insert>
+
+    <update id="deleteByCustomerId">
+        UPDATE customer_tag
+        SET delete_flag = 1
+        WHERE customer_id = #{customerId}
+    </update>
+
+    <update id="deleteByCustomerIdAndTags">
+        UPDATE customer_tag
+        SET delete_flag = 1
+        WHERE customer_id = #{customerId}
+        AND tag_name IN
+        <foreach collection="tags" item="tag" open="(" separator="," close=")">
+            #{tag}
+        </foreach>
+    </update>
+
+    <select id="searchTags" resultType="java.lang.String">
+        SELECT DISTINCT tag_name
+        FROM customer_tag
+        WHERE organization_id = #{organizationId}
+        <if test="keyword != null and keyword != ''">
+            AND tag_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        AND delete_flag = 0
+        ORDER BY tag_name
+    </select>
+
+    <select id="getCustomerIdsByTags" resultType="java.lang.String">
+        SELECT DISTINCT customer_id
+        FROM customer_tag
+        WHERE tag_name IN
+        <foreach collection="tags" item="tag" open="(" separator="," close=")">
+            #{tag}
+        </foreach>
+        AND organization_id = #{organizationId}
+        AND delete_flag = 0
+    </select>
+
+    <select id="getAllTagsByOrganizationId" resultType="java.lang.String">
+        SELECT DISTINCT tag_name
+        FROM customer_tag
+        WHERE organization_id = #{organizationId}
+        AND delete_flag = 0
+        ORDER BY tag_name
+    </select>
+
+</mapper>

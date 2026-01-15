@@ -18,6 +18,7 @@ export interface UpdateCustomerParams extends SaveCustomerParams {
 
 export interface CustomerTableParams extends TableQueryParams {
   viewId: CustomerSearchTypeEnum; // 搜索类型(ALL/SELF/DEPARTMENT/CUSTOMER_COLLABORATION)
+  tags?: string[]; // 标签筛选
 }
 
 export interface CustomerListItem {

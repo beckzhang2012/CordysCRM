@@ -37,6 +37,14 @@
             <property name="sort" value="request.sort"/>
         </include>
 
+        <if test="request.tags != null and request.tags.size() > 0">
+            join customer_tag ct on c.id = ct.customer_id
+            and ct.tag_name in
+            <foreach collection="request.tags" item="tag" open="(" close=")" separator=",">
+                #{tag}
+            </foreach>
+        </if>
+
         <if test="dataPermission != null and dataPermission.deptIds.size() > 0">
             join sys_organization_user sou on c.owner = sou.user_id
             and (

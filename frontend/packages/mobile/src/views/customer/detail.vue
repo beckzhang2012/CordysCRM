@@ -9,6 +9,10 @@
         </template>
         <div v-if="tab.name === 'info'" class="relative h-full overflow-auto bg-[var(--text-n9)] pt-[16px]">
           <CrmDescription :description="descriptions" />
+          <CrmCustomerTags 
+            :customer-id="route.query.id?.toString() ?? ''"
+            :readonly="!hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE']) || collaborationType === 'READ_ONLY'"
+          />
         </div>
         <CrmContactList
           v-else-if="tab.name === 'contact'"
@@ -68,16 +72,17 @@
   import { useI18n } from '@lib/shared/hooks/useI18n';
 
   import CrmDescription from '@/components/pure/crm-description/index.vue';
-  import CrmPageWrapper from '@/components/pure/crm-page-wrapper/index.vue';
-  import CrmActionButtons, { CrmActionButtonsItem } from '@/components/business/crm-action-buttons/index.vue';
-  import CrmContactList from '@/components/business/crm-contact-list/index.vue';
-  import CrmFollowPlanList from '@/components/business/crm-follow-list/followPlan.vue';
-  import CrmFollowRecordList from '@/components/business/crm-follow-list/followRecord.vue';
-  import CrmHeaderList from '@/components/business/crm-header-list/index.vue';
-  import collaborator from './components/collaborator.vue';
-  import relation from './components/relation.vue';
+import CrmPageWrapper from '@/components/pure/crm-page-wrapper/index.vue';
+import CrmActionButtons, { CrmActionButtonsItem } from '@/components/business/crm-action-buttons/index.vue';
+import CrmContactList from '@/components/business/crm-contact-list/index.vue';
+import CrmFollowPlanList from '@/components/business/crm-follow-list/followPlan.vue';
+import CrmFollowRecordList from '@/components/business/crm-follow-list/followRecord.vue';
+import CrmHeaderList from '@/components/business/crm-header-list/index.vue';
+import CrmCustomerTags from '@/components/business/customer-tags/index.vue';
+import collaborator from './components/collaborator.vue';
+import relation from './components/relation.vue';
 
-  import { deleteCustomer, getCustomerHeaderList } from '@/api/modules';
+import { deleteCustomer, getCustomerHeaderList } from '@/api/modules';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
