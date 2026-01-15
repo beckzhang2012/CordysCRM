@@ -121,6 +121,15 @@ import {
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
 } from '@lib/shared/api/requrls/customer';
+import {
+  AddCustomerReminderUrl,
+  UpdateCustomerReminderUrl,
+  DeleteCustomerReminderUrl,
+  GetCustomerReminderMyListUrl,
+  GetCustomerReminderListUrl,
+  GetCustomerReminderCountUrl,
+  GetCustomerReminderPendingUrl,
+} from '@lib/shared/api/requrls/customer/reminder';
 import type {
   ChartResponseDataItem,
   CommonList,
@@ -175,6 +184,12 @@ import type {
   UpdateCustomerRelationItemParams,
   UpdateFollowPlanStatusParams,
 } from '@lib/shared/models/customer';
+import type {
+  CustomerReminderListItem,
+  CustomerReminderTableParams,
+  SaveCustomerReminderParams,
+  UpdateCustomerReminderParams,
+} from '@lib/shared/models/customer/reminder';
 import type { CluePoolItem, FormDesignConfigDetailParams, OpportunityItem } from '@lib/shared/models/system/module';
 import { ValidateInfo } from '@lib/shared/models/system/org';
 import type { ViewItem, ViewParams } from '@lib/shared/models/view';
@@ -770,6 +785,34 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  function addCustomerReminder(data: SaveCustomerReminderParams) {
+    return CDR.post({ url: AddCustomerReminderUrl, data });
+  }
+
+  function updateCustomerReminder(data: UpdateCustomerReminderParams) {
+    return CDR.post({ url: UpdateCustomerReminderUrl, data });
+  }
+
+  function deleteCustomerReminder(id: string) {
+    return CDR.get({ url: `${DeleteCustomerReminderUrl}/${id}` });
+  }
+
+  function getCustomerReminderMyList(data: CustomerReminderTableParams) {
+    return CDR.post<CommonList<CustomerReminderListItem>>({ url: GetCustomerReminderMyListUrl, data });
+  }
+
+  function getCustomerReminderList(customerId: string) {
+    return CDR.get<CustomerReminderListItem[]>({ url: `${GetCustomerReminderListUrl}/${customerId}` });
+  }
+
+  function getCustomerReminderCount() {
+    return CDR.get<{ count: number }>({ url: GetCustomerReminderCountUrl });
+  }
+
+  function getPendingReminders() {
+    return CDR.get<CustomerReminderListItem[]>({ url: GetCustomerReminderPendingUrl });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -891,5 +934,12 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    addCustomerReminder,
+    updateCustomerReminder,
+    deleteCustomerReminder,
+    getCustomerReminderMyList,
+    getCustomerReminderList,
+    getCustomerReminderCount,
+    getPendingReminders,
   };
 }
