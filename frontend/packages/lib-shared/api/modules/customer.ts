@@ -120,6 +120,12 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  GetCustomerTagsUrl,
+  SaveCustomerTagsUrl,
+  DeleteCustomerTagsUrl,
+  SearchCustomerTagsUrl,
+  GetAllCustomerTagsUrl,
+  GetCustomerIdsByTagsUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -770,6 +776,31 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  // 客户标签
+  function getCustomerTags(customerId: string) {
+    return CDR.get<{ customerId: string; tags: string[] }>({ url: `${GetCustomerTagsUrl}/${customerId}` });
+  }
+
+  function saveCustomerTags(data: { customerId: string; tags: string[] }) {
+    return CDR.post({ url: SaveCustomerTagsUrl, data });
+  }
+
+  function deleteCustomerTags(data: { customerId: string; tags: string[] }) {
+    return CDR.post({ url: DeleteCustomerTagsUrl, data });
+  }
+
+  function searchCustomerTags(data: { keyword: string }) {
+    return CDR.post<{ tags: string[] }>({ url: SearchCustomerTagsUrl, data });
+  }
+
+  function getAllCustomerTags() {
+    return CDR.get<{ tags: string[] }>({ url: GetAllCustomerTagsUrl });
+  }
+
+  function getCustomerIdsByTags(data: { tags: string[] }) {
+    return CDR.post<{ customerIds: string[] }>({ url: GetCustomerIdsByTagsUrl, data });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -891,5 +922,11 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    getCustomerTags,
+    saveCustomerTags,
+    deleteCustomerTags,
+    searchCustomerTags,
+    getAllCustomerTags,
+    getCustomerIdsByTags,
   };
 }

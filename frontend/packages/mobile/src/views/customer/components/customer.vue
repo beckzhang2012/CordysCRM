@@ -36,6 +36,17 @@
         {{ item.tab }}
       </van-button>
     </div>
+    <div class="tag-filter" v-if="allTags.length > 0">
+      <van-tag
+        v-for="tag of allTags"
+        :key="tag"
+        :type="selectedTags.includes(tag) ? 'primary' : 'default'"
+        class="!mr-2 !mb-2"
+        @click="toggleTag(tag)"
+      >
+        {{ tag }}
+      </van-tag>
+    </div>
     <CrmList
       ref="crmListRef"
       :keyword="keyword"
@@ -70,7 +81,7 @@
   import CrmList from '@/components/pure/crm-list/index.vue';
   import CrmListCommonItem from '@/components/pure/crm-list-common-item/index.vue';
 
-  import { deleteCustomer, getCustomerList } from '@/api/modules';
+  import { deleteCustomer, getCustomerList, getAllCustomerTags } from '@/api/modules';
   import useFormCreateTransform from '@/hooks/useFormCreateTransform';
   import useHiddenTab from '@/hooks/useHiddenTab';
 
@@ -101,12 +112,35 @@
   ];
   const { tabList, activeFilter } = useHiddenTab(filterButtons, FormDesignKeyEnum.CUSTOMER);
 
+  const allTags = ref<string[]>([]);
+  const selectedTags = ref<string[]>([]);
+
   const listParams = computed(() => {
     return {
       viewId: activeFilter.value,
       keyword: keyword.value,
+      tags: selectedTags.value.length > 0 ? selectedTags.value : undefined,
     };
   });
+
+  async function loadAllTags() {
+    try {
+      const res = await getAllCustomerTags();
+      allTags.value = res.tags || [];
+    } catch (error) {
+      console.error('加载标签失败', error);
+    }
+  }
+
+  function toggleTag(tag: string) {
+    const index = selectedTags.value.indexOf(tag);
+    if (index > -1) {
+      selectedTags.value.splice(index, 1);
+    } else {
+      selectedTags.value.push(tag);
+    }
+    crmListRef.value?.loadList(true);
+  }
 
   const { transformFormData } = await useFormCreateTransform(FormDesignKeyEnum.CUSTOMER);
 
@@ -208,6 +242,11 @@
 
   onActivated(() => {
     crmListRef.value?.loadList(true);
+    loadAllTags();
+  });
+
+  onMounted(() => {
+    loadAllTags();
   });
 
   async function search() {
@@ -245,6 +284,12 @@
 
     gap: 8px;
     padding: 8px 4px;
+    background-color: var(--text-n10);
+    .half-px-border-bottom();
+  }
+
+  .tag-filter {
+    padding: 8px 16px;
     background-color: var(--text-n10);
     .half-px-border-bottom();
   }
