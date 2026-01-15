@@ -103,8 +103,8 @@ const handleSave = async () => {
         await addReminder({
           sourceId: props.sourceId,
           sourceName: props.sourceName,
-          remindTime: formData.remindTime,
-          content: formData.content,
+          remindTime: formData.remindTime ? formData.remindTime.toISOString() : '',
+          remindContent: formData.content,
         });
         emit('saved');
         handleClose();

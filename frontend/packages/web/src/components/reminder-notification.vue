@@ -23,12 +23,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import type { NotificationProviderInst, DropdownInst } from 'naive-ui';
+import { useOsTheme } from 'naive-ui';
+import type { DropdownInst } from 'naive-ui';
 import { Bell } from '@vicons/ionicons5';
 import { getPendingReminders, markReminderAsRead, deleteReminder } from '@/api/modules/reminder';
 import type { Reminder } from '@lib/shared/models/reminder';
 
-const notificationProviderRef = ref<NotificationProviderInst | null>(null);
+const osThemeRef = useOsTheme();
 const dropdownRef = ref<DropdownInst | null>(null);
 const reminders = ref<Reminder[]>([]);
 let checkInterval: number | null = null;
@@ -55,29 +56,25 @@ const checkReminders = async () => {
 };
 
 const showNotification = (reminder: Reminder) => {
-  if (notificationProviderRef.value) {
-    notificationProviderRef.value.create({
-      title: '跟进提醒',
-      content: `
+  window.$message?.create({
+    content: (
+      <div style="max-width: 300px;">
+        <div style="font-weight: bold; margin-bottom: 8px;">跟进提醒</div>
+        <p><strong>${reminder.sourceName}</strong></p>
+        <p>${reminder.remindContent}</p>
+        <div style="color: #666; font-size: 12px; margin-top: 8px;">
+          ${new Date(reminder.remindTime).toLocaleString()}
+        </div>
+      </div>
+    
         <div style="max-width: 300px;">
           <p><strong>${reminder.sourceName}</strong></p>
           <p>${reminder.content}</p>
         </div>
       `,
-      meta: new Date(reminder.remindTime).toLocaleString(),
-      action: () => {
-        return {
-          type: 'button',
-          text: '查看',
-          onClick: () => {
-            // 可以跳转到客户详情页
-            console.log('查看提醒:', reminder);
-          },
-        };
-      },
       duration: 0,
+      theme: osThemeRef.value,
     });
-  }
 };
 
 const showReminders = () => {
@@ -88,14 +85,14 @@ const showReminders = () => {
 
 const updateNotificationOptions = () => {
   notificationOptions.value = reminders.value.map((reminder) => ({
-    key: reminder.id,
+    key: reminder.id || '',
     label: `
       <div style="width: 300px;">
         <div style="font-weight: bold;">${reminder.sourceName}</div>
         <div style="color: #666; font-size: 12px; margin-top: 4px;">
           ${new Date(reminder.remindTime).toLocaleString()}
         </div>
-        <div style="margin-top: 4px;">${reminder.content}</div>
+        <div style="margin-top: 4px;">${reminder.remindContent}</div>
       </div>
     `,
     reminder,

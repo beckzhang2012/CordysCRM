@@ -8,6 +8,7 @@ export default {
   'customer.batchDeleteTitleTip': '确认删除 {number} 个客户吗？',
   'customer.batchDeleteContentTip': '删除后，成员无法查到该客户，请谨慎操作！',
   'customer.moveToOpenSea': '移入公海',
+  'customer.setReminder': '设置提醒',
   'customer.moveToSeaOrPool': '移入公海/线索池',
   'customer.batchMoveTitleTip': '确认移入 {number} 个客户至公海吗？',
   'customer.moveCustomerToOpenSeaTitleTip': '确认移入 {name} 客户至公海吗？',
