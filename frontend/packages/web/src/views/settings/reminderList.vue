@@ -59,7 +59,6 @@ const pagination = reactive<PaginationProps>({
   showSizePicker: true,
   pageSizes: [10, 20, 50],
   showQuickJumper: true,
-  showTotal: (total) => `共 ${total} 条`,
 });
 
 const columns = [

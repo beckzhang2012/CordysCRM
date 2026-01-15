@@ -40,7 +40,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue';
-import type { FormInst, Rules } from 'naive-ui';
+import type { FormInst } from 'naive-ui';
+import type { FormRules } from 'naive-ui/es/form/src/interface';
 import { addReminder } from '@/api/modules/reminder';
 
 const props = defineProps<{
@@ -62,7 +63,7 @@ const formData = reactive({
   content: '',
 });
 
-const rules = computed<Rules>(() => ({
+const rules = computed<FormRules>(() => ({
   remindTime: {
     required: true,
     message: '请选择提醒时间',
