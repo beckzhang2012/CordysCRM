@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.reminder.mapper.ExtReminderMapper">
+
+    <select id="list" resultType="cn.cordys.crm.reminder.dto.response.ReminderListResponse">
+        select r.id, r.customer_id, r.customer_name, r.reminder_time, r.content, r.is_read,
+               r.create_time, r.creator_name
+        from `reminder` r
+        where r.organization_id = #{orgId}
+        and r.creator_id = #{userId}
+        <if test="request.isRead != null">
+            and r.is_read = #{request.isRead}
+        </if>
+        <if test="request.customerId != null and request.customerId != ''">
+            and r.customer_id = #{request.customerId}
+        </if>
+        order by r.reminder_time desc, r.create_time desc
+        limit #{request.offset}, #{request.pageSize}
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        select count(*)
+        from `reminder` r
+        where r.organization_id = #{orgId}
+        and r.creator_id = #{userId}
+        and r.is_read = false
+    </select>
+
+</mapper>

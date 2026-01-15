@@ -7,6 +7,7 @@ import useCustomerApi from '@lib/shared/api/modules/customer';
 import useFollowApi from '@lib/shared/api/modules/follow';
 import useOpportunityApi from '@lib/shared/api/modules/opportunity';
 import useProductApi from '@lib/shared/api/modules/product';
+import useReminderApi from '@lib/shared/api/modules/reminder';
 import useLicenseApi from '@lib/shared/api/modules/system/authorizedManagement';
 import useBusinessApi from '@lib/shared/api/modules/system/business';
 import useLoginApi from '@lib/shared/api/modules/system/login';
@@ -33,6 +34,7 @@ const loginApi = useLoginApi(CDR);
 const licenseApi = useLicenseApi(CDR);
 const followApi = useFollowApi(CDR);
 const contractApi = useContractApi(CDR);
+const reminderApi = useReminderApi(CDR);
 
 export const {
   getFollowPlanDetail,
@@ -342,3 +344,13 @@ export const {
 export const { isLogin, signout, getKey, login, getThirdOauthCallback, getThirdCallback } = loginApi;
 
 export const { getLicense, addLicense } = licenseApi;
+
+export const {
+  getReminderList,
+  getReminder,
+  addReminder,
+  deleteReminder,
+  markAsRead,
+  markAllAsRead,
+  getUnreadCount,
+} = reminderApi;
