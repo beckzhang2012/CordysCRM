@@ -33,6 +33,7 @@ import cn.cordys.crm.customer.domain.*;
 import cn.cordys.crm.customer.dto.request.*;
 import cn.cordys.crm.customer.dto.response.CustomerGetResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
+import cn.cordys.crm.customer.dto.response.TagResponse;
 import cn.cordys.crm.customer.mapper.ExtCustomerContactMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerPoolMapper;
@@ -150,7 +151,52 @@ public class CustomerService {
     @Resource
     private ExtFollowUpPlanMapper extFollowUpPlanMapper;
     @Resource
+    private BaseMapper<CustomerTag> customerTagMapper;
+    @Resource
     private BaseMapper<CustomerCollaboration> customerCollaborationMapper;
+
+    public void addTags(CustomerTagRequest request, String userId, String orgId) {
+        // 删除旧标签
+        LambdaQueryWrapper<CustomerTag> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(CustomerTag::getCustomerId, request.getCustomerId());
+        deleteWrapper.eq(CustomerTag::getOrganizationId, orgId);
+        customerTagMapper.deleteByLambda(deleteWrapper);
+
+        // 插入新标签
+        for (String tagName : request.getTagNames()) {
+            CustomerTag customerTag = new CustomerTag();
+            customerTag.setId(IDGenerator.nextStr());
+            customerTag.setCustomerId(request.getCustomerId());
+            customerTag.setTagName(tagName);
+            customerTag.setOrganizationId(orgId);
+            customerTag.setCreateTime(System.currentTimeMillis());
+            customerTag.setUpdateTime(System.currentTimeMillis());
+            customerTag.setCreateUser(userId);
+            customerTag.setUpdateUser(userId);
+            customerTagMapper.insert(customerTag);
+        }
+    }
+
+    public List<String> getTags(String customerId, String orgId) {
+        LambdaQueryWrapper<CustomerTag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CustomerTag::getCustomerId, customerId);
+        queryWrapper.eq(CustomerTag::getOrganizationId, orgId);
+        List<CustomerTag> tags = customerTagMapper.selectListByLambda(queryWrapper);
+        return tags.stream().map(CustomerTag::getTagName).collect(Collectors.toList());
+    }
+
+    public List<TagResponse> getAllTags(String orgId) {
+        LambdaQueryWrapper<CustomerTag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CustomerTag::getOrganizationId, orgId);
+        queryWrapper.select(CustomerTag::getTagName);
+        queryWrapper.groupBy(CustomerTag::getTagName);
+        List<CustomerTag> tags = customerTagMapper.selectListByLambda(queryWrapper);
+        return tags.stream().map(tag -> {
+            TagResponse response = new TagResponse();
+            response.setName(tag.getTagName());
+            return response;
+        }).collect(Collectors.toList());
+    }
     @Resource
     private BaseMapper<CustomerContact> customerContactMapper;
 
@@ -322,6 +368,9 @@ public class CustomerService {
         }
         CustomerGetResponse customerGetResponse = BeanUtils.copyBean(new CustomerGetResponse(), customer);
         customerGetResponse = baseService.setCreateUpdateOwnerUserName(customerGetResponse);
+        // 获取标签
+        List<String> tags = getTags(id, customer.getOrganizationId());
+        customerGetResponse.setTags(tags);
         // 获取模块字段
         List<BaseModuleFieldValue> customerFields = customerFieldService.getModuleFieldValuesByResourceId(id);
         ModuleFormConfigDTO customerFormConfig = getFormConfig(customer.getOrganizationId());

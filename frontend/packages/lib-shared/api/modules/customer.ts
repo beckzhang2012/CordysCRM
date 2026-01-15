@@ -120,6 +120,9 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagUrl,
+  SaveCustomerTagUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -179,7 +182,7 @@ import type { CluePoolItem, FormDesignConfigDetailParams, OpportunityItem } from
 import { ValidateInfo } from '@lib/shared/models/system/org';
 import type { ViewItem, ViewParams } from '@lib/shared/models/view';
 import type { ContractItem } from '@lib/shared/models/contract';
-export default function useProductApi(CDR: CordysAxios) {
+export default function useCustomerApi(CDR: CordysAxios) {
   // 添加客户
   function addCustomer(data: SaveCustomerParams) {
     return CDR.post({ url: AddCustomerUrl, data });
@@ -492,6 +495,21 @@ export default function useProductApi(CDR: CordysAxios) {
   // 批量删除客户协作成员
   function batchDeleteCustomerCollaboration(data: string[]) {
     return CDR.post({ url: BatchDeleteCustomerCollaborationUrl, data });
+  }
+
+  // 保存客户标签
+  function saveCustomerTag(data: { customerId: string; tagNames: string[] }) {
+    return CDR.post({ url: SaveCustomerTagUrl, data });
+  }
+
+  // 获取客户标签
+  function getCustomerTag(id: string) {
+    return CDR.get<string[]>({ url: `${GetCustomerTagUrl}/${id}` });
+  }
+
+  // 获取所有标签
+  function getCustomerTagList() {
+    return CDR.get<string[]>({ url: GetCustomerTagListUrl });
   }
 
   // 更新客户协作成员
@@ -891,5 +909,8 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    saveCustomerTag,
+    getCustomerTag,
+    getCustomerTagList,
   };
 }
