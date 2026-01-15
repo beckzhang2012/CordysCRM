@@ -357,7 +357,27 @@ export interface BatchUpdatePoolAccountParams {
 }
 
 export interface MergeAccountParams {
-  mergeIds: string[]; // 合并客户ids
-  toMergeId: string | null; // 合并目标客户id
+  mergeIds: string[];
+  toMergeId: string | null;
   ownerId: string | null;
+}
+
+export interface CustomerTag {
+  id: string;
+  name: string;
+  color: string;
+  organizationId: string;
+  createUser: string;
+  usageCount: number;
+  createTime: number;
+  updateTime: number;
+}
+
+export interface CustomerTagRelation {
+  id: string;
+  customerId: string;
+  tagId: string;
+  organizationId: string;
+  createTime: number;
+  updateTime: number;
 }
