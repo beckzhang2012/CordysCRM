@@ -360,6 +360,11 @@
     emit('saved');
   }
 
+  const showReminderModal = ref(false);
+  function handleSetReminder() {
+    showReminderModal.value = true;
+  }
+
   function refresh() {
     emit('saved');
     show.value = false;
@@ -368,11 +373,6 @@
   function handleDescriptionInit(_collaborationType?: CollaborationType, _sourceName?: string) {
     collaborationType.value = _collaborationType;
     sourceName.value = _sourceName || '';
-  }
-
-  const showReminderModal = ref(false);
-  function handleSetReminder() {
-    showReminderModal.value = true;
   }
 
   function handleReminderSaved() {

@@ -57,21 +57,20 @@
   };
 
   const showNotification = (reminder: Reminder) => {
-    // @ts-ignore
-    window.$message?.create({
-      content: `
-      <div style="max-width: 300px;">
-        <div style="font-weight: bold; margin-bottom: 8px;">跟进提醒</div>
-        <p><strong>${reminder.sourceName}</strong></p>
-        <p>${reminder.remindContent}</p>
-        <div style="color: #666; font-size: 12px; margin-top: 8px;">
-          ${new Date(reminder.remindTime).toLocaleString()}
-        </div>
-      </div>
-    `,
-      duration: 0,
-      theme: osThemeRef.value,
-    });
+    const messageApi = window.$message;
+    if (messageApi) {
+      messageApi.create({
+        content: h('div', { style: { maxWidth: '300px' } }, [
+          h('div', { style: { fontWeight: 'bold', marginBottom: '8px' } }, '跟进提醒'),
+          h('p', [h('strong', reminder.sourceName)]),
+          h('p', reminder.remindContent),
+          h('div', { style: { color: '#666', fontSize: '12px', marginTop: '8px' } },
+            new Date(reminder.remindTime).toLocaleString()),
+        ]),
+        duration: 0,
+        theme: osThemeRef.value,
+      });
+    }
   };
 
   const showReminders = () => {

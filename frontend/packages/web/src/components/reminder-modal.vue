@@ -66,6 +66,11 @@
     },
   }));
 
+  const resetForm = () => {
+    formData.remindTime = null;
+    formData.content = '';
+  };
+
   watch(
     () => props.show,
     (val) => {
@@ -75,7 +80,7 @@
     }
   );
 
-  const resetForm = () => {
+  const handleClose = () => {
     formData.remindTime = null;
     formData.content = '';
   };
@@ -100,7 +105,7 @@
           emit('saved');
           handleClose();
         } catch (error) {
-          console.error('保存提醒失败', error);
+          // console.error('保存提醒失败', error);
         } finally {
           loading.value = false;
         }
