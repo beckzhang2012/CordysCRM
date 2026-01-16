@@ -17,6 +17,8 @@ import cn.cordys.crm.customer.utils.PoolCustomerFieldUtils;
 import cn.cordys.crm.system.constants.ExportConstants;
 import cn.cordys.crm.system.domain.ExportTask;
 import cn.cordys.crm.system.dto.field.base.BaseField;
+import cn.cordys.crm.system.dto.request.ExportQueueRequest;
+import cn.cordys.crm.system.service.ExportQueueService;
 import cn.cordys.crm.system.service.ExportTaskService;
 import cn.cordys.registry.ExportThreadRegistry;
 import cn.idev.excel.EasyExcel;
@@ -44,6 +46,8 @@ public class CustomerExportService extends BaseExportService {
     private ExportTaskService exportTaskService;
     @Resource
     private ExtCustomerMapper extCustomerMapper;
+    @Resource
+    private ExportQueueService exportQueueService;
 
 
     public String export(String userId, CustomerExportRequest request, String orgId, DeptDataPermissionDTO deptDataPermission, Locale locale) {
@@ -61,6 +65,31 @@ public class CustomerExportService extends BaseExportService {
         return exportTask.getId();
     }
 
+    public String exportWithQueue(String userId, CustomerExportRequest request, String orgId, DeptDataPermissionDTO deptDataPermission, Locale locale) {
+        checkFileName(request.getFileName());
+        exportTaskService.checkUserTaskLimit(userId, ExportConstants.ExportStatus.PREPARED.toString());
+
+        String fileId = IDGenerator.nextStr();
+        String taskId = IDGenerator.nextStr();
+
+        ExportQueueRequest queueRequest = ExportQueueRequest.builder()
+                .taskId(taskId)
+                .userId(userId)
+                .orgId(orgId)
+                .fileName(request.getFileName())
+                .resourceType(ExportConstants.ExportType.CUSTOMER.toString())
+                .exportType(ExportConstants.ExportType.CUSTOMER.toString())
+                .logModule(LogModule.CUSTOMER_INDEX.toString())
+                .locale(locale.toLanguageTag())
+                .exportParams(request)
+                .priority(0)
+                .retryCount(0)
+                .maxRetryCount(3)
+                .build();
+
+        return exportQueueService.enqueueTask(queueRequest);
+    }
+
     public void exportCustomerData(ExportTask exportTask, String userId, CustomerExportRequest request, String orgId, DeptDataPermissionDTO deptDataPermission, Locale locale) throws Exception {
         //表头信息
         List<List<String>> headList = request.getHeadList().stream()
@@ -73,6 +102,24 @@ public class CustomerExportService extends BaseExportService {
                 request.getFileName(),
                 request,
                 t -> getExportData(request.getHeadList(), request, userId, orgId, deptDataPermission, exportTask.getId()));
+    }
+
+    public void exportCustomerData(ExportTask exportTask, ExportQueueRequest queueRequest) throws Exception {
+        CustomerExportRequest request = (CustomerExportRequest) queueRequest.getExportParams();
+        Locale locale = Locale.forLanguageTag(queueRequest.getLocale());
+        
+        //表头信息
+        List<List<String>> headList = request.getHeadList().stream()
+                .map(head -> Collections.singletonList(head.getTitle()))
+                .toList();
+        
+        //分批查询数据并写入文件 - 使用优化的流式处理
+        streamHandleData(exportTask.getFileId(),
+                headList,
+                exportTask,
+                request.getFileName(),
+                request,
+                t -> getExportData(request.getHeadList(), request, queueRequest.getUserId(), queueRequest.getOrgId(), null, exportTask.getId()));
     }
 
     private List<Object> buildData(List<ExportHeadDTO> headList, CustomerListResponse data, Map<String, BaseField> fieldConfigMap) {
