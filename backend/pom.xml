@@ -274,6 +274,12 @@
             <version>${quartz-starter.version}</version>
         </dependency>
 
+        <!-- RabbitMQ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <!-- Excel / Tools -->
         <dependency>
             <groupId>cn.idev.excel</groupId>
