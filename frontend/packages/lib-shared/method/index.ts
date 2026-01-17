@@ -515,19 +515,22 @@ export function openDocumentLink(url: string) {
  * @param type 类型
  */
 export function formatTimeValue(value: string | number, type?: FormCreateFieldDateType) {
-  if (value) {
-    const date = dayjs(Number(value));
-    switch (type) {
-      case 'month':
-        return date.format('YYYY-MM');
-      case 'date':
-        return date.format('YYYY-MM-DD');
-      case 'datetime':
-      default:
-        return date.format('YYYY-MM-DD HH:mm:ss');
-    }
+  if (value == null || value === '' || Number.isNaN(Number(value))) {
+    return '-';
   }
-  return '-';
+  const date = dayjs(Number(value));
+  if (!date.isValid()) {
+    return '-';
+  }
+  switch (type) {
+    case 'month':
+      return date.format('YYYY-MM');
+    case 'date':
+      return date.format('YYYY-MM-DD');
+    case 'datetime':
+    default:
+      return date.format('YYYY-MM-DD HH:mm:ss');
+  }
 }
 
 /**
