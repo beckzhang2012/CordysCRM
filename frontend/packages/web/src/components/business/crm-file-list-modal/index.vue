@@ -11,7 +11,7 @@
               {{
                 t('crm.fileListModal.uploadAt', {
                   name: file.createUser,
-                  time: dayjs(file.createTime).format('YYYY-MM-DD HH:mm:ss'),
+                  time: file.createTime ? dayjs(file.createTime).format('YYYY-MM-DD HH:mm:ss') : '-',
                 })
               }}
             </div>

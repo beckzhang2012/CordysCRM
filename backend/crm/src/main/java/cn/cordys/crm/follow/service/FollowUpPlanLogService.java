@@ -64,8 +64,20 @@ public class FollowUpPlanLogService extends BaseModuleLogService {
             }
 
             if (Strings.CS.equals(differ.getColumn(), BusinessModuleField.FOLLOW_PLAN_ESTIMATED_TIME.getBusinessKey())) {
-                differ.setOldValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getOldValue().toString())));
-                differ.setNewValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getNewValue().toString())));
+                if (differ.getOldValue() != null) {
+                    try {
+                        differ.setOldValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getOldValue().toString())));
+                    } catch (NumberFormatException e) {
+                        differ.setOldValueName(StringUtils.EMPTY);
+                    }
+                }
+                if (differ.getNewValue() != null) {
+                    try {
+                        differ.setNewValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getNewValue().toString())));
+                    } catch (NumberFormatException e) {
+                        differ.setNewValueName(StringUtils.EMPTY);
+                    }
+                }
                 continue;
             }
 

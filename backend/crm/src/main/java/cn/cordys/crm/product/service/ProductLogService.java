@@ -73,10 +73,18 @@ public class ProductLogService extends BaseModuleLogService {
             }
             if (Strings.CS.equals(differ.getColumn(), timeModuleFieldId)) {
                 if (differ.getOldValue() != null) {
-                    differ.setOldValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getOldValue().toString())));
+                    try {
+                        differ.setOldValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getOldValue().toString())));
+                    } catch (NumberFormatException e) {
+                        differ.setOldValueName(StringUtils.EMPTY);
+                    }
                 }
                 if (differ.getNewValue() != null) {
-                    differ.setNewValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getNewValue().toString())));
+                    try {
+                        differ.setNewValueName(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(differ.getNewValue().toString())));
+                    } catch (NumberFormatException e) {
+                        differ.setNewValueName(StringUtils.EMPTY);
+                    }
                 }
             }
             if (CollectionUtils.isNotEmpty(attachModuleFieldIds) && attachModuleFieldIds.contains(differ.getColumn())) {

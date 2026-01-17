@@ -116,7 +116,7 @@
               </n-tooltip>
               <div
                 class="opportunity-billboard-item-desc-value"
-                :class="{ '!text-[var(--error-red)]': dayjs(item.expectedEndTime).isSame(dayjs(), 'M') }"
+                :class="{ '!text-[var(--error-red)]': item.expectedEndTime && dayjs(item.expectedEndTime).isSame(dayjs(), 'M') }"
               >
                 {{ item.expectedEndTime ? dayjs(item.expectedEndTime).format('YYYY-MM-DD') : '-' }}
               </div>

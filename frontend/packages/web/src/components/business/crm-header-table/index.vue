@@ -133,8 +133,8 @@
     (row: HeaderHistoryItem) => {
       return {
         ...row,
-        collectionTime: dayjs(row.collectionTime).format('YYYY-MM-DD HH:mm:ss'),
-        endTime: dayjs(row.endTime).format('YYYY-MM-DD HH:mm:ss'),
+        collectionTime: row.collectionTime ? dayjs(row.collectionTime).format('YYYY-MM-DD HH:mm:ss') : '-',
+        endTime: row.endTime ? dayjs(row.endTime).format('YYYY-MM-DD HH:mm:ss') : '-',
       };
     }
   );

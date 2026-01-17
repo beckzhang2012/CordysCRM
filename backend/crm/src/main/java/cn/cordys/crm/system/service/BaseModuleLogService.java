@@ -291,7 +291,11 @@ public abstract class BaseModuleLogService {
         if (StringUtils.isBlank(value) || Strings.CI.equals(value, "null")) {
             return StringUtils.EMPTY;
         }
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(value));
+        try {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Long.parseLong(value));
+        } catch (NumberFormatException e) {
+            return StringUtils.EMPTY;
+        }
     }
 
     protected void setUserFieldName(JsonDifferenceDTO differ) {
