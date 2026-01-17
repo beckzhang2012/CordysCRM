@@ -390,6 +390,25 @@ public class CustomerService {
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
     public Customer add(CustomerAddRequest request, String userId, String orgId) {
+        String phone = null;
+        String email = null;
+        if (request.getModuleFields() != null) {
+            for (BaseModuleFieldValue field : request.getModuleFields()) {
+                if ("phone".equals(field.getFieldId()) || "mobile".equals(field.getFieldId())) {
+                    phone = String.valueOf(field.getFieldValue());
+                } else if ("email".equals(field.getFieldId())) {
+                    email = String.valueOf(field.getFieldValue());
+                }
+            }
+        }
+
+        if (StringUtils.isNotBlank(phone) || StringUtils.isNotBlank(email)) {
+            List<Customer> existingCustomers = extCustomerMapper.selectByPhoneOrEmail(phone, email, orgId);
+            if (existingCustomers != null && !existingCustomers.isEmpty()) {
+                throw new RuntimeException("已存在相同手机号或邮箱的客户");
+            }
+        }
+
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);

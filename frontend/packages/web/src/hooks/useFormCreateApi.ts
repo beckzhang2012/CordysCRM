@@ -1,5 +1,5 @@
 import { useMessage } from 'naive-ui';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, debounce } from 'lodash-es';
 import dayjs from 'dayjs';
 
 import {
@@ -64,6 +64,24 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   const fieldShowControlMap = ref<Record<string, any>>({}); // 表单字段显示控制映射
   const loading = ref(false);
   const unsaved = ref(false);
+  const isSubmitting = ref(false);
+  const requestId = ref('');
+
+  function generateRequestId(): string {
+    return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  const debouncedSave = debounce(async (form: Record<string, any>, isContinue: boolean, callback?: (_isContinue: boolean, res: any) => void, noReset = false) => {
+    if (isSubmitting.value) return;
+    isSubmitting.value = true;
+    requestId.value = generateRequestId();
+    try {
+      await saveFormInternal(form, isContinue, callback, noReset);
+    } finally {
+      isSubmitting.value = false;
+    }
+  }, 300);
+
   const formConfig = ref<FormConfig>({
     layout: 1,
     labelPos: 'top',
@@ -1220,7 +1238,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     initForm(props.linkScenario?.value);
   }
 
-  async function saveForm(
+  async function saveFormInternal(
     form: Record<string, any>,
     isContinue: boolean,
     callback?: (_isContinue: boolean, res: any) => void,
@@ -1267,6 +1285,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       if (needModuleFormConfigParamsType.includes(props.formKey.value)) {
         params.moduleFormConfigDTO = moduleFormConfig.value;
       }
+      params.requestId = requestId.value;
       let res;
       if (props.sourceId?.value && props.needInitDetail?.value) {
         res = await updateFormApi[props.formKey.value](params);
@@ -1293,6 +1312,10 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     }
   }
 
+  function saveForm(form: Record<string, any>, isContinue: boolean, callback?: (_isContinue: boolean, res: any) => void, noReset = false) {
+    debouncedSave(form, isContinue, callback, noReset);
+  }
+
   const formCreateTitle = computed(() => {
     if (props.formKey.value === FormDesignKeyEnum.CLUE_TRANSITION_CUSTOMER) {
       return t('clue.convertToCustomer');
@@ -1306,6 +1329,8 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     fieldList,
     loading,
     unsaved,
+    isSubmitting,
+    requestId,
     formConfig,
     formDetail,
     originFormDetail,
