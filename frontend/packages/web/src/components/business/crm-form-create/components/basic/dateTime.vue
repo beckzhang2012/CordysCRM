@@ -70,19 +70,19 @@
   );
 
   watch(
-    () => props.fieldConfig.dateDefaultType,
-    (val) => {
-      if (val === 'current') {
-        value.value = new Date().getTime();
-      } else if (val === 'custom' && props.fieldConfig.defaultValue === null) {
-        value.value = null;
+      () => props.fieldConfig.dateDefaultType,
+      (val) => {
+        if (val === 'current') {
+          value.value = new Date().getTime();
+        } else if (val === 'custom') {
+          value.value = props.fieldConfig.defaultValue ?? null;
+        }
+        emit('change', value.value);
+      },
+      {
+        immediate: true,
       }
-      emit('change', value.value);
-    },
-    {
-      immediate: true,
-    }
-  );
+    );
 </script>
 
 <style lang="less" scoped></style>
