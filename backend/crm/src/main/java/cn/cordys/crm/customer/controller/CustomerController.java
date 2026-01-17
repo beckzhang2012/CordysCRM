@@ -101,8 +101,8 @@ public class CustomerController {
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_ADD)
     @Operation(summary = "添加客户")
-    public Customer add(@Validated @RequestBody CustomerAddRequest request) {
-        return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+    public Customer add(@Validated @RequestBody CustomerAddRequest request, @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), idempotencyKey);
     }
 
     @PostMapping("/update")

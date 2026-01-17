@@ -1,6 +1,6 @@
 import { showSuccessToast } from 'vant';
-import { cloneDeep } from 'lodash-es';
-import dayjs from 'dayjs';
+  import { cloneDeep, debounce } from 'lodash-es';
+  import dayjs from 'dayjs';
 
 import { FieldTypeEnum, FormDesignKeyEnum, type FormLinkScenarioEnum } from '@lib/shared/enums/formDesignEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
@@ -255,7 +255,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     } finally {
       loading.value = false;
     }
-  }
+  }, 300, { leading: true, trailing: false });
 
   function initFieldValue(field: FormCreateField, value: string | number | (string | number)[]) {
     if (
@@ -610,7 +610,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     }
   }
 
-  async function saveForm(form: Record<string, any>, callback?: () => void) {
+  const saveForm = debounce(async (form: Record<string, any>, callback?: () => void) => {
     try {
       loading.value = true;
       const params: Record<string, any> = {
