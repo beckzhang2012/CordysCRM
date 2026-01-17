@@ -32,14 +32,14 @@
       </div>
     </n-scrollbar>
     <div class="crm-form-create-footer" :class="formConfig.optBtnPos">
-      <n-button v-if="props.isEdit" type="primary" @click="handleSave(false)">
+      <n-button v-if="props.isEdit" type="primary" :disabled="isSubmitting || loading" @click="handleSave(false)">
         {{ t('common.update') }}
       </n-button>
       <template v-else>
-        <n-button v-if="formConfig.optBtnContent[0].enable" type="primary" @click="handleSave(false)">
+        <n-button v-if="formConfig.optBtnContent[0].enable" type="primary" :disabled="isSubmitting || loading" @click="handleSave(false)">
           {{ formConfig.optBtnContent[0].text }}
         </n-button>
-        <n-button v-if="formConfig.optBtnContent[1].enable" type="primary" ghost @click="handleSave(true)">
+        <n-button v-if="formConfig.optBtnContent[1].enable" type="primary" ghost :disabled="isSubmitting || loading" @click="handleSave(true)">
           {{ formConfig.optBtnContent[1].text }}
         </n-button>
       </template>
@@ -279,9 +279,15 @@
     });
   }
 
+  const isSubmitting = ref(false);
+
   function handleSave(isContinue = false) {
+    if (isSubmitting.value) {
+      return;
+    }
     formRef.value?.validate((errors) => {
       if (!errors) {
+        isSubmitting.value = true;
         const result = cloneDeep(formDetail.value);
         fieldList.value.forEach((item) => {
           if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
@@ -293,6 +299,7 @@
           }
         });
         saveForm(result, isContinue, (_isContinue, res) => {
+          isSubmitting.value = false;
           emit('saved', isContinue, res);
         });
       } else {

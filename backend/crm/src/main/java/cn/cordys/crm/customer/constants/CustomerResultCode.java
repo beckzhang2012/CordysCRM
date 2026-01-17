@@ -9,7 +9,9 @@ public enum CustomerResultCode implements IResultCode {
 
     CUSTOMER_EXIST(102001, "customer.exist"),
     CUSTOMER_CONTACT_EXIST(102002, "customer_contact.exist"),
-    CUSTOMER_RESOURCE_REF(102003, "customer.ref_resource.exist");
+    CUSTOMER_RESOURCE_REF(102003, "customer.ref_resource.exist"),
+    OPERATION_TOO_FREQUENT(102004, "customer.operation.too.frequent"),
+    CUSTOMER_ALREADY_EXISTS(102005, "customer.already.exists");
 
     private final int code;
     private final String message;
