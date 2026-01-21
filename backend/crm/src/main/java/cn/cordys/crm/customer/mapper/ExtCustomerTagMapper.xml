@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <resultMap id="CustomerTagResult" type="cn.cordys.crm.customer.domain.CustomerTag">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="description" property="description" />
+        <result column="color" property="color" />
+        <result column="category" property="category" />
+        <result column="organization_id" property="organizationId" />
+        <result column="creator" property="creator" />
+        <result column="is_system" property="isSystem" />
+        <result column="usage_count" property="usageCount" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <resultMap id="CustomerTagRelationResult" type="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        <id column="id" property="id" />
+        <result column="customer_id" property="customerId" />
+        <result column="tag_id" property="tagId" />
+        <result column="organization_id" property="organizationId" />
+        <result column="adder" property="adder" />
+        <result column="add_time" property="addTime" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <select id="selectTagList" resultMap="CustomerTagResult">
+        SELECT * FROM customer_tag
+        <where>
+            <if test="organizationId != null">
+                AND organization_id = #{organizationId}
+            </if>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="isSystem != null">
+                AND is_system = #{isSystem}
+            </if>
+        </where>
+        ORDER BY usage_count DESC, created_at DESC
+    </select>
+
+    <select id="selectTagById" resultMap="CustomerTagResult">
+        SELECT * FROM customer_tag WHERE id = #{id}
+    </select>
+
+    <insert id="insertTag" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        INSERT INTO customer_tag (
+            id, name, description, color, category, 
+            organization_id, creator, is_system, usage_count,
+            created_at, updated_at
+        ) VALUES (
+            #{id}, #{name}, #{description}, #{color}, #{category}, 
+            #{organizationId}, #{creator}, #{isSystem}, #{usageCount},
+            #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateTag" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        UPDATE customer_tag SET
+            name = #{name},
+            description = #{description},
+            color = #{color},
+            category = #{category},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteTag">
+        DELETE FROM customer_tag WHERE id = #{id}
+    </delete>
+
+    <update id="incrementTagUsageCount">
+        UPDATE customer_tag SET
+            usage_count = usage_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="decrementTagUsageCount">
+        UPDATE customer_tag SET
+            usage_count = GREATEST(usage_count - 1, 0)
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectTagRelationsByCustomerId" resultMap="CustomerTagRelationResult">
+        SELECT * FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+    </select>
+
+    <select id="countCustomersByTagId" resultType="int">
+        SELECT COUNT(DISTINCT customer_id) FROM customer_tag_relation
+        WHERE tag_id = #{tagId}
+    </select>
+
+    <insert id="insertTagRelation" parameterType="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        INSERT INTO customer_tag_relation (
+            id, customer_id, tag_id, organization_id, 
+            adder, add_time, created_at, updated_at
+        ) VALUES (
+            #{id}, #{customerId}, #{tagId}, #{organizationId}, 
+            #{adder}, #{addTime}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <insert id="batchInsertTagRelations" parameterType="list">
+        INSERT INTO customer_tag_relation (
+            id, customer_id, tag_id, organization_id, 
+            adder, add_time, created_at, updated_at
+        ) VALUES
+        <foreach collection="list" item="relation" separator=",">
+            (
+                #{relation.id}, #{relation.customerId}, #{relation.tagId}, #{relation.organizationId}, 
+                #{relation.adder}, #{relation.addTime}, #{relation.createdAt}, #{relation.updatedAt}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteTagRelation">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId} AND tag_id = #{tagId}
+    </delete>
+
+    <delete id="batchDeleteTagRelations">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId} AND tag_id IN
+        <foreach collection="tagIds" item="tagId" open="(" close=")" separator=",">
+            #{tagId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteAllTagRelationsByCustomerId">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+    </delete>
+
+    <delete id="deleteAllTagRelationsByTagId">
+        DELETE FROM customer_tag_relation
+        WHERE tag_id = #{tagId}
+    </delete>
+
+</mapper>
