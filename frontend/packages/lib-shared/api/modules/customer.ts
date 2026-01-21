@@ -8,6 +8,8 @@ import {
   AddCustomerFollowRecordUrl,
   AddCustomerOpenSeaUrl,
   AddCustomerRelationItemUrl,
+  AddCustomerTagUrl,
+  AddCustomerTagsUrl,
   AddCustomerUrl,
   AddCustomerViewUrl,
   AssignOpenSeaCustomerUrl,
@@ -31,6 +33,7 @@ import {
   DeleteCustomerFollowRecordUrl,
   DeleteCustomerOpenSeaUrl,
   DeleteCustomerRelationItemUrl,
+  DeleteCustomerTagUrl,
   DeleteCustomerUrl,
   DeleteCustomerViewUrl,
   DeleteOpenSeaCustomerUrl,
@@ -83,6 +86,9 @@ import {
   GetCustomerOptionsUrl,
   GetCustomerRelationListUrl,
   GetCustomerTabUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagUrl,
+  GetCustomerTagsUrl,
   GetCustomerUrl,
   GetCustomerViewDetailUrl,
   GetCustomerViewListUrl,
@@ -103,6 +109,7 @@ import {
   PoolAccountBatchUpdateUrl,
   PreCheckAccountImportUrl,
   PreCheckContactImportUrl,
+  RemoveCustomerTagsUrl,
   SaveCustomerRelationUrl,
   SwitchCustomerOpenSeaUrl,
   UpdateAccountPoolViewUrl,
@@ -114,6 +121,7 @@ import {
   UpdateCustomerFollowRecordUrl,
   UpdateCustomerOpenSeaUrl,
   UpdateCustomerRelationItemUrl,
+  UpdateCustomerTagUrl,
   UpdateCustomerUrl,
   UpdateCustomerViewUrl,
   GetAccountContractListUrl,
@@ -770,6 +778,39 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  // 标签管理
+  function addCustomerTag(data: any) {
+    return CDR.post({ url: AddCustomerTagUrl, data });
+  }
+
+  function updateCustomerTag(data: any) {
+    return CDR.post({ url: UpdateCustomerTagUrl, data });
+  }
+
+  function deleteCustomerTag(id: string) {
+    return CDR.get({ url: `${DeleteCustomerTagUrl}/${id}` });
+  }
+
+  function getCustomerTag(id: string) {
+    return CDR.get({ url: `${GetCustomerTagUrl}/${id}` });
+  }
+
+  function getCustomerTagList() {
+    return CDR.get({ url: GetCustomerTagListUrl });
+  }
+
+  function addCustomerTags(data: any) {
+    return CDR.post({ url: AddCustomerTagsUrl, data });
+  }
+
+  function removeCustomerTags(data: any) {
+    return CDR.post({ url: RemoveCustomerTagsUrl, data });
+  }
+
+  function getCustomerTags(customerId: string) {
+    return CDR.get({ url: `${GetCustomerTagsUrl}/${customerId}` });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -891,5 +932,14 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    // 标签管理
+    addCustomerTag,
+    updateCustomerTag,
+    deleteCustomerTag,
+    getCustomerTag,
+    getCustomerTagList,
+    addCustomerTags,
+    removeCustomerTags,
+    getCustomerTags,
   };
 }

@@ -40,6 +40,13 @@
           :readonly="!hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE']) || collaborationType === 'READ_ONLY'"
         />
         <collaborator v-else-if="tab.name === 'collaborator'" ref="collaboratorListRef" :source-id="sourceId" />
+        <div v-else-if="tab.name === 'tags'" class="tags-tab">
+          <customer-tags 
+            :customer-id="sourceId" 
+            :customer-name="sourceName"
+            :readonly="!hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE']) || collaborationType === 'READ_ONLY'"
+          />
+        </div>
         <CrmHeaderList v-else :source-id="sourceId" :load-list-api="getCustomerHeaderList" />
       </van-tab>
     </van-tabs>
@@ -76,6 +83,7 @@
   import CrmHeaderList from '@/components/business/crm-header-list/index.vue';
   import collaborator from './components/collaborator.vue';
   import relation from './components/relation.vue';
+  import customerTags from './components/tags.vue';
 
   import { deleteCustomer, getCustomerHeaderList } from '@/api/modules';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
@@ -127,6 +135,10 @@
       {
         name: 'collaborator',
         title: t('customer.collaborator'),
+      },
+      {
+        name: 'tags',
+        title: '标签管理',
       },
     ];
     if (collaborationType.value) {

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <!-- 新增标签 -->
+    <insert id="insert" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        INSERT INTO customer_tag
+        (id, name, description, color, type, is_system, organization_id, created_by, created_time, updated_by, updated_time)
+        VALUES
+        (#{tag.id}, #{tag.name}, #{tag.description}, #{tag.color}, #{tag.type}, #{tag.isSystem}, #{tag.organizationId},
+         #{tag.createdBy}, #{tag.createdTime}, #{tag.updatedBy}, #{tag.updatedTime})
+    </insert>
+
+    <!-- 更新标签 -->
+    <update id="update" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        UPDATE customer_tag
+        SET name = #{tag.name},
+            description = #{tag.description},
+            color = #{tag.color},
+            type = #{tag.type},
+            updated_by = #{tag.updatedBy},
+            updated_time = #{tag.updatedTime}
+        WHERE id = #{tag.id}
+    </update>
+
+    <!-- 删除标签 -->
+    <delete id="delete" parameterType="java.lang.String">
+        DELETE FROM customer_tag WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询标签 -->
+    <select id="selectById" parameterType="java.lang.String" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT id, name, description, color, type, is_system as isSystem, organization_id as organizationId,
+               created_by as createdBy, created_time as createdTime, updated_by as updatedBy, updated_time as updatedTime
+        FROM customer_tag
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询标签列表 -->
+    <select id="selectList" parameterType="java.lang.String" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT id, name, description, color, type, is_system as isSystem, organization_id as organizationId,
+               created_by as createdBy, created_time as createdTime, updated_by as updatedBy, updated_time as updatedTime
+        FROM customer_tag
+        WHERE organization_id = #{orgId}
+        ORDER BY created_time DESC
+    </select>
+
+    <!-- 根据名称查询标签 -->
+    <select id="selectByName" parameterType="java.util.Map" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT id, name, description, color, type, is_system as isSystem, organization_id as organizationId,
+               created_by as createdBy, created_time as createdTime, updated_by as updatedBy, updated_time as updatedTime
+        FROM customer_tag
+        WHERE name = #{name}
+          AND organization_id = #{orgId}
+    </select>
+
+    <!-- 获取标签选项 -->
+    <select id="selectTagOptions" parameterType="java.lang.String" resultType="cn.cordys.common.dto.OptionDTO">
+        SELECT id as value, name as label
+        FROM customer_tag
+        WHERE organization_id = #{orgId}
+        ORDER BY created_time DESC
+    </select>
+
+    <!-- 新增客户标签关联 -->
+    <insert id="insertRelation" parameterType="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        INSERT INTO customer_tag_relation
+        (id, customer_id, tag_id, organization_id, created_by, created_time, updated_by, updated_time)
+        VALUES
+        (#{relation.id}, #{relation.customerId}, #{relation.tagId}, #{relation.organizationId},
+         #{relation.createdBy}, #{relation.createdTime}, #{relation.updatedBy}, #{relation.updatedTime})
+    </insert>
+
+    <!-- 删除客户标签关联 -->
+    <delete id="deleteRelation" parameterType="java.util.Map">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+          AND tag_id = #{tagId}
+    </delete>
+
+    <!-- 删除客户的所有标签关联 -->
+    <delete id="deleteRelationsByCustomerId" parameterType="java.lang.String">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+    </delete>
+
+    <!-- 查询客户的标签列表 -->
+    <select id="selectTagsByCustomerId" parameterType="java.lang.String" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT t.id, t.name, t.description, t.color, t.type, t.is_system as isSystem, t.organization_id as organizationId,
+               t.created_by as createdBy, t.created_time as createdTime, t.updated_by as updatedBy, t.updated_time as updatedTime
+        FROM customer_tag t
+        INNER JOIN customer_tag_relation r ON t.id = r.tag_id
+        WHERE r.customer_id = #{customerId}
+    </select>
+
+    <!-- 查询标签关联数量 -->
+    <select id="countRelationsByTagId" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM customer_tag_relation WHERE tag_id = #{tagId}
+    </select>
+
+</mapper>
