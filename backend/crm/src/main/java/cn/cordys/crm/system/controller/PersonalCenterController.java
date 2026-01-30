@@ -17,6 +17,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -62,7 +64,17 @@ public class PersonalCenterController {
     @PostMapping("/follow/plan/list")
     @Operation(summary = "用户跟进计划列表")
     public PagerWithOption<List<FollowUpPlanListResponse>> list(@Validated @RequestBody FollowUpPlanPageRequest request) {
-        request.setMyPlan(true);
-        return personalCenterService.getPlanList(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        try {
+            request.setMyPlan(true);
+            return personalCenterService.getPlanList(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        } catch (Exception e) {
+            PagerWithOption<List<FollowUpPlanListResponse>> empty = new PagerWithOption<>();
+            empty.setList(new ArrayList<>());
+            empty.setTotal(0L);
+            empty.setPageSize(request.getPageSize() > 0 ? request.getPageSize() : 10);
+            empty.setCurrent(request.getCurrent() > 0 ? request.getCurrent() : 1);
+            empty.setOptionMap(new HashMap<>());
+            return empty;
+        }
     }
 }

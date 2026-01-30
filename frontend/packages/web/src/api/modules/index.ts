@@ -8,6 +8,7 @@ import useFollowApi from '@lib/shared/api/modules/follow';
 import useHomeApi from '@lib/shared/api/modules/home';
 import useOpportunityApi from '@lib/shared/api/modules/opportunity';
 import useProductApi from '@lib/shared/api/modules/product';
+import useReminderApi from '@lib/shared/api/modules/reminder';
 import useSysApi from '@lib/shared/api/modules/sys';
 import useLicenseApi from '@lib/shared/api/modules/system/authorizedManagement';
 import useBusinessApi from '@lib/shared/api/modules/system/business';
@@ -45,6 +46,7 @@ const businessApi = useBusinessApi(CDR);
 const dashboardApi = useDashboard(CDR);
 const opportunityApi = useOpportunityApi(CDR);
 const contractApi = useContractApi(CDR);
+const reminderApi = useReminderApi(CDR);
 
 export const {
   getFollowPlanTab,
@@ -640,3 +642,12 @@ export const {
   agentApplicationOptions,
   getMkApplication,
 } = agentApi;
+
+export const {
+  addReminder,
+  getReminderList,
+  deleteReminder,
+  cancelReminder,
+  getPendingReminderCount,
+  processReminder,
+} = reminderApi;

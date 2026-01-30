@@ -190,7 +190,7 @@
     if (activeTab.value === id) {
       // 取第一个系统视图
       const list = [...viewStore.internalViews].filter((item) => item.enable);
-      activeTab.value = list[0].id;
+      activeTab.value = list[0]?.id ?? sortData.value[0]?.id ?? '';
     }
   }
 
@@ -207,12 +207,12 @@
     await viewStore.loadInternalViews(props.type, tabList.value as TabPaneProps[]);
     await viewStore.loadCustomViews(props.type);
     nextTick(async () => {
-      // 如果上一次的值存在则取上一次，不存在就取固定视图的第一个
+      // 如果上一次的值存在则取上一次，不存在就取固定视图的第一个，无则取第一个可用视图
       const lastTab = await viewStore.getActiveView(props.type);
       if (lastTab && sortData.value.find((item) => item.id === lastTab)) {
         activeTab.value = lastTab;
       } else {
-        activeTab.value = tags.value[0].id;
+        activeTab.value = tags.value[0]?.id ?? sortData.value[0]?.id ?? '';
       }
     });
   });
