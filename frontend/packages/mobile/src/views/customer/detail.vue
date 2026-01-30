@@ -8,6 +8,7 @@
           </div>
         </template>
         <div v-if="tab.name === 'info'" class="relative h-full overflow-auto bg-[var(--text-n9)] pt-[16px]">
+          <CustomerTagManagement :customer-id="sourceId" :collaboration-type="collaborationType" />
           <CrmDescription :description="descriptions" />
         </div>
         <CrmContactList
@@ -76,6 +77,7 @@
   import CrmHeaderList from '@/components/business/crm-header-list/index.vue';
   import collaborator from './components/collaborator.vue';
   import relation from './components/relation.vue';
+  import CustomerTagManagement from './components/tag-management.vue';
 
   import { deleteCustomer, getCustomerHeaderList } from '@/api/modules';
   import useFormCreateApi from '@/hooks/useFormCreateApi';

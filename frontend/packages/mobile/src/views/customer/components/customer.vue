@@ -36,6 +36,9 @@
         {{ item.tab }}
       </van-button>
     </div>
+
+    <!-- 标签筛选组件 -->
+    <TagFilter v-model="selectedTagIds" />
     <CrmList
       ref="crmListRef"
       :keyword="keyword"
@@ -69,6 +72,7 @@
 
   import CrmList from '@/components/pure/crm-list/index.vue';
   import CrmListCommonItem from '@/components/pure/crm-list-common-item/index.vue';
+  import TagFilter from './tag-filter.vue';
 
   import { deleteCustomer, getCustomerList } from '@/api/modules';
   import useFormCreateTransform from '@/hooks/useFormCreateTransform';
@@ -81,6 +85,7 @@
 
   const crmListRef = ref<InstanceType<typeof CrmList>>();
   const keyword = ref('');
+  const selectedTagIds = ref<string[]>([]); // 选中的标签ID数组
   const filterButtons = [
     {
       name: CustomerSearchTypeEnum.ALL,
@@ -105,6 +110,7 @@
     return {
       viewId: activeFilter.value,
       keyword: keyword.value,
+      tagIds: selectedTagIds.value,
     };
   });
 
@@ -199,6 +205,15 @@
 
   watch(
     () => activeFilter.value,
+    () => {
+      nextTick(() => {
+        crmListRef.value?.loadList(true);
+      });
+    }
+  );
+
+  watch(
+    () => selectedTagIds.value,
     () => {
       nextTick(() => {
         crmListRef.value?.loadList(true);

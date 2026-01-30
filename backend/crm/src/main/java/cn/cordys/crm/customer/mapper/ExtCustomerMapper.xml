@@ -100,6 +100,18 @@
             and c.name like concat('%', #{request.keyword},'%')
         </if>
 
+        <if test="request.tagIds != null and request.tagIds.size() > 0">
+            and c.id in (
+                select ctr.customer_id from customer_tag_relation ctr
+                where ctr.tag_id in
+                <foreach collection="request.tagIds" item="tagId" open="(" close=")" separator=",">
+                    #{tagId}
+                </foreach>
+                group by ctr.customer_id
+                having count(ctr.customer_id) = #{request.tagIds.size()}
+            )
+        </if>
+
         <include refid="filters">
             <property name="filters" value="request.filters"/>
         </include>
