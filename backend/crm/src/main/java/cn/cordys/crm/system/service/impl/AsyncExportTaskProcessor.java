@@ -1,21 +1,20 @@
 package cn.cordys.crm.system.service.impl;
 
+import cn.cordys.common.util.LogUtils;
+import cn.cordys.crm.system.constants.ExportConstants;
+import cn.cordys.crm.system.domain.ExportTask;
+import cn.cordys.crm.system.dto.request.AsyncExportRequest;
 import cn.cordys.crm.system.service.ExportMessageQueueService;
 import cn.cordys.crm.system.service.ExportTaskService;
 import cn.cordys.crm.system.service.StreamingExportService;
-import cn.cordys.crm.system.dto.request.AsyncExportRequest;
-import cn.cordys.crm.system.constants.ExportConstants;
-import cn.cordys.crm.system.domain.ExportTask;
-import cn.cordys.common.util.LogUtils;
+import cn.cordys.file.engine.DefaultRepositoryDir;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,10 +26,10 @@ public class AsyncExportTaskProcessor {
 
     @Resource
     private ExportTaskService exportTaskService;
-    
+
     @Resource
-    private StreamingExportService streamingExportService;
-    
+    private Map<String, StreamingExportService> streamingExportServices;
+
     @Resource
     private ExportMessageQueueService exportMessageQueueService;
     
@@ -98,31 +97,37 @@ public class AsyncExportTaskProcessor {
                 return;
             }
             
+            // 根据导出类型获取对应的流式导出服务
+            StreamingExportService exportService = getExportService(request.getExportType());
+            if (exportService == null) {
+                throw new RuntimeException("不支持的导出类型: " + request.getExportType());
+            }
+
             // 构建文件路径
             String filePath = buildFilePath(request);
-            
+
             // 创建进度回调
             StreamingExportService.ProgressCallback progressCallback = new StreamingExportService.ProgressCallback() {
                 @Override
                 public void onProgress(String taskId, long processed, long total, double percentage) {
                     exportTaskService.updateProgress(taskId, processed, total, percentage, request.getUserId());
                 }
-                
+
                 @Override
                 public void onComplete(String taskId, boolean success, String message) {
                     if (!success) {
                         exportTaskService.updateError(taskId, message, request.getUserId());
                     } else {
-                        exportTaskService.update(taskId, 
-                                ExportConstants.ExportStatus.SUCCESS.toString(), 
+                        exportTaskService.update(taskId,
+                                ExportConstants.ExportStatus.SUCCESS.toString(),
                                 request.getUserId());
                     }
                     processingTasks.remove(taskId);
                 }
             };
-            
+
             // 执行流式导出
-            streamingExportService.streamExportToFile(request, filePath, progressCallback);
+            exportService.streamExportToFile(request, filePath, progressCallback);
             
         } catch (Exception e) {
             LogUtils.error("处理导出任务失败: " + taskId, e);
@@ -132,17 +137,35 @@ public class AsyncExportTaskProcessor {
     }
 
     /**
+     * 根据导出类型获取对应的导出服务
+     */
+    private StreamingExportService getExportService(String exportType) {
+        try {
+            ExportConstants.ExportType type = ExportConstants.ExportType.valueOf(exportType);
+            return switch (type) {
+                case CUSTOMER -> streamingExportServices.get("customerStreamingExportService");
+                case CLUE -> streamingExportServices.get("clueStreamingExportService");
+                case OPPORTUNITY -> streamingExportServices.get("opportunityStreamingExportService");
+                default -> null;
+            };
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
      * 构建导出文件路径
      */
     private String buildFilePath(AsyncExportRequest request) {
-        // 这里需要根据实际的文件存储规则构建文件路径
-        // 暂时使用简单的路径构建
-        String uploadPath = System.getProperty("user.dir") + "/uploads/export/";
-        File dir = new File(uploadPath);
-        if (!dir.exists()) {
-            dir.mkdirs();
+        String exportDir = DefaultRepositoryDir.getDefaultDir()
+                + File.separator
+                + DefaultRepositoryDir.getExportDir(request.getOrganizationId())
+                + File.separator + request.getFileId();
+        File dir = new File(exportDir);
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new RuntimeException("无法创建导出目录: " + dir.getAbsolutePath());
         }
-        return uploadPath + request.getFileId() + "_" + request.getFileName();
+        return exportDir + File.separator + request.getFileName() + ".xlsx";
     }
 
     /**

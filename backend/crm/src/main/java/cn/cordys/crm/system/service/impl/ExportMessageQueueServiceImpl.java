@@ -237,18 +237,6 @@ public class ExportMessageQueueServiceImpl implements ExportMessageQueueService 
     }
     
     /**
-     * 检查任务是否已取消
-     */
-    private boolean isTaskCancelled(String taskId) {
-        try {
-            return redisTemplate.opsForSet().isMember(CANCELLED_TASKS_KEY, taskId);
-        } catch (Exception e) {
-            LogUtils.error("检查任务取消状态失败: " + taskId, e);
-            return false;
-        }
-    }
-    
-    /**
      * 处理导出任务
      */
     private void processExportTask(AsyncExportRequest request) {

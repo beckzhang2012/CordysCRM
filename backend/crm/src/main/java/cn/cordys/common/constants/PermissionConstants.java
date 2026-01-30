@@ -202,5 +202,10 @@ public class PermissionConstants {
     /*------ start: TENDER ------*/
     public static final String TENDER_READ = "TENDER:READ";
     /*------ end: TENDER ------*/
+
+    /*------ start: EXPORT_TASK ------*/
+    public static final String EXPORT_TASK_READ = "EXPORT_TASK:READ";
+    public static final String EXPORT_TASK_CANCEL = "EXPORT_TASK:CANCEL";
+    /*------ end: EXPORT_TASK ------*/
 }
 

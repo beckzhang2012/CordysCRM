@@ -15,4 +15,12 @@ public class ModuleFormConfigDTO {
 
     @Schema(description = "表单属性")
     private FormProp formProp;
+
+    public List<BaseField> getModuleFields() {
+        return fields;
+    }
+
+    public void setModuleFields(List<BaseField> fields) {
+        this.fields = fields;
+    }
 }

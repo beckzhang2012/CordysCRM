@@ -77,7 +77,7 @@ public class ExportTaskService {
      * @return 导出任务
      */
     public ExportTask getById(String taskId) {
-        return exportTaskMapper.selectById(taskId);
+        return exportTaskMapper.selectByPrimaryKey(taskId);
     }
     
     /**

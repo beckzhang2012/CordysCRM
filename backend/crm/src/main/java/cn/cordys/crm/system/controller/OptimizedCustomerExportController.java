@@ -8,7 +8,7 @@ import cn.cordys.context.OrganizationContext;
 import cn.cordys.crm.customer.dto.request.CustomerExportRequest;
 import cn.cordys.crm.customer.service.OptimizedCustomerExportService;
 import cn.cordys.security.SessionUtils;
-import cn.cordys.crm.system.service.DataScopeService;
+import cn.cordys.common.service.DataScopeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
