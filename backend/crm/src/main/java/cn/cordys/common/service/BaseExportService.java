@@ -26,6 +26,7 @@ import cn.cordys.crm.system.service.ExportTaskService;
 import cn.cordys.crm.system.service.LogService;
 import cn.cordys.crm.system.service.ModuleFormCacheService;
 import cn.cordys.crm.system.service.ModuleFormService;
+import cn.cordys.crm.system.service.ExportTaskProducerService;
 import cn.cordys.file.engine.DefaultRepositoryDir;
 import cn.cordys.registry.ExportThreadRegistry;
 import cn.idev.excel.EasyExcel;
@@ -58,6 +59,8 @@ public abstract class BaseExportService {
     private LogService logService;
     @Resource
     private ExportTaskService exportTaskService;
+    @Resource
+    private ExportTaskProducerService exportTaskProducerService;
 
 
     public Map<String, BaseField> getFieldConfigMap(String formKey, String orgId) {
@@ -69,7 +72,6 @@ public abstract class BaseExportService {
 
 
     public <T extends BasePageRequest> void batchHandleData(String fileId, List<List<String>> headList, ExportTask task, String fileName, T t, CustomFunction<T, List<?>> func) throws InterruptedException {
-        // 准备导出文件
         File file = prepareExportFile(fileId, fileName, task.getOrganizationId());
 
         try (ExcelWriter writer = EasyExcel.write(file)
@@ -80,11 +82,16 @@ public abstract class BaseExportService {
             WriteSheet sheet = EasyExcel.writerSheet("导出数据").build();
 
             int current = 1;
+            int totalProcessed = 0;
             t.setPageSize(EXPORT_MAX_COUNT);
 
             while (true) {
                 if (ExportThreadRegistry.isInterrupted(task.getId())) {
                     throw new InterruptedException("线程已被中断，主动退出");
+                }
+
+                if (exportTaskProducerService.isTaskCancelled(task.getId())) {
+                    throw new InterruptedException("任务已被用户取消");
                 }
 
                 t.setCurrent(current);
@@ -93,14 +100,16 @@ public abstract class BaseExportService {
                     break;
                 }
                 writer.write(data, sheet);
+                
+                totalProcessed += data.size();
+                exportTaskProducerService.updateTaskProgress(task.getId(), totalProcessed, -1);
+                
                 if (data.size() < EXPORT_MAX_COUNT) {
                     break;
                 }
                 current++;
             }
         }
-
-
     }
 
     /**
@@ -131,6 +140,7 @@ public abstract class BaseExportService {
             WriteSheet sheet = EasyExcel.writerSheet("导出数据").build();
 
             int offset = 2, current = 1;
+            int totalProcessed = 0;
             t.setPageSize(EXPORT_MAX_COUNT);
 
             while (true) {
@@ -138,21 +148,26 @@ public abstract class BaseExportService {
                     throw new InterruptedException("线程已被中断，主动退出");
                 }
 
+                if (exportTaskProducerService.isTaskCancelled(task.getId())) {
+                    throw new InterruptedException("任务已被用户取消");
+                }
+
                 t.setCurrent(current);
                 MergeResult mergeResult = func.apply(t);
                 if (CollectionUtils.isEmpty(mergeResult.getDataList())) {
                     break;
                 }
-                // 写入数据
                 writer.write(mergeResult.getDataList(), sheet);
-                // 执行合并策略
                 Sheet mergeSheet = writer.writeContext().writeWorkbookHolder().getWorkbook().getSheetAt(0);
                 SummaryMergeHandler strategy = new SummaryMergeHandler(mergeResult.getMergeRegions(), mergeColumns, offset);
                 strategy.merge(mergeSheet);
+                
+                totalProcessed += mergeResult.getDataList().size();
+                exportTaskProducerService.updateTaskProgress(task.getId(), totalProcessed, -1);
+                
                 if (mergeResult.getDataList().size() < EXPORT_MAX_COUNT) {
                     break;
                 }
-                // 下一页&&记录偏移量
                 current++;
                 offset += mergeResult.getDataList().size();
             }

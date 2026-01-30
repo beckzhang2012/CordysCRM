@@ -17,7 +17,10 @@ import cn.cordys.crm.customer.utils.PoolCustomerFieldUtils;
 import cn.cordys.crm.system.constants.ExportConstants;
 import cn.cordys.crm.system.domain.ExportTask;
 import cn.cordys.crm.system.dto.field.base.BaseField;
+import cn.cordys.crm.system.dto.ExportTaskMessage;
+import cn.cordys.crm.system.service.ExportTaskProducerService;
 import cn.cordys.crm.system.service.ExportTaskService;
+import cn.cordys.common.util.JSON;
 import cn.cordys.registry.ExportThreadRegistry;
 import cn.idev.excel.EasyExcel;
 import cn.idev.excel.ExcelWriter;
@@ -44,19 +47,39 @@ public class CustomerExportService extends BaseExportService {
     private ExportTaskService exportTaskService;
     @Resource
     private ExtCustomerMapper extCustomerMapper;
+    @Resource
+    private ExportTaskProducerService exportTaskProducerService;
 
 
     public String export(String userId, CustomerExportRequest request, String orgId, DeptDataPermissionDTO deptDataPermission, Locale locale) {
         checkFileName(request.getFileName());
-        //用户导出数量 限制
         exportTaskService.checkUserTaskLimit(userId, ExportConstants.ExportStatus.PREPARED.toString());
 
         String fileId = IDGenerator.nextStr();
         ExportTask exportTask = exportTaskService.saveTask(orgId, fileId, userId, ExportConstants.ExportType.CUSTOMER.toString(), request.getFileName());
 
-        // 启动虚拟线程执行导出任务
-        runExport(orgId, userId, LogModule.CUSTOMER_INDEX, locale, exportTask, request.getFileName(),
-                () -> exportCustomerData(exportTask, userId, request, orgId, deptDataPermission, locale));
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("current", request.getCurrent());
+        requestMap.put("pageSize", request.getPageSize());
+        requestMap.put("headList", request.getHeadList());
+        requestMap.put("keyword", request.getKeyword());
+        requestMap.put("combineSearch", request.getCombineSearch());
+        if (deptDataPermission != null) {
+            requestMap.put("deptDataPermission", deptDataPermission);
+        }
+
+        ExportTaskMessage message = new ExportTaskMessage(
+            exportTask.getId(),
+            fileId,
+            userId,
+            orgId,
+            ExportConstants.ExportType.CUSTOMER.toString(),
+            request.getFileName(),
+            locale,
+            JSON.toJSONString(requestMap)
+        );
+
+        exportTaskProducerService.submitExportTask(message);
 
         return exportTask.getId();
     }
@@ -101,14 +124,23 @@ public class CustomerExportService extends BaseExportService {
      */
     public String exportSelect(String userId, ExportSelectRequest request, String orgId, Locale locale) {
         checkFileName(request.getFileName());
-        // 用户导出数量限制
         exportTaskService.checkUserTaskLimit(userId, ExportConstants.ExportStatus.PREPARED.toString());
 
         String fileId = IDGenerator.nextStr();
         ExportTask exportTask = exportTaskService.saveTask(orgId, fileId, userId, ExportConstants.ExportType.CUSTOMER.toString(), request.getFileName());
 
-        runExport(orgId, userId, LogModule.CUSTOMER_INDEX, locale, exportTask, request.getFileName(),
-                () -> exportSelectData(exportTask, userId, request, orgId, locale));
+        ExportTaskMessage message = new ExportTaskMessage(
+            exportTask.getId(),
+            fileId,
+            userId,
+            orgId,
+            ExportConstants.ExportType.CUSTOMER.toString(),
+            request.getFileName(),
+            locale,
+            JSON.toJSONString(request)
+        );
+
+        exportTaskProducerService.submitExportTask(message);
 
         return exportTask.getId();
     }
