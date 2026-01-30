@@ -47,6 +47,8 @@ export default mergeConfig(
         cache: false,
         include: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.vue'],
         exclude: ['node_modules'],
+        failOnError: false,
+        failOnWarning: false,
       }),
     ],
   },

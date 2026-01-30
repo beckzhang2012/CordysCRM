@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+  import { unref } from 'vue';
   import { NButton } from 'naive-ui';
 
   import CrmIcon from '@/components/pure/crm-icon-font/index.vue';
@@ -34,7 +35,7 @@
   const { toggleFullScreen, isFullScreen } = useFullScreen(props.containerRef);
 
   watch(isFullScreen, (val) => {
-    emit('toggleFullScreen', val);
+    emit('toggleFullScreen', unref(val));
   });
 </script>
 

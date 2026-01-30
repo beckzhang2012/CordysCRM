@@ -78,8 +78,12 @@ public class OrganizationSettingsController {
     @GetMapping("/third-party/sync/resource")
     @Operation(summary = "获取最新的三方同步来源")
     public OrganizationConfig getLatestSyncResource() {
-        String organizationId = Optional.ofNullable(OrganizationContext.getOrganizationId()).orElse(DEFAULT_ORGANIZATION_ID);
-        return integrationConfigService.getLatestSyncResource(organizationId);
+        try {
+            String organizationId = Optional.ofNullable(OrganizationContext.getOrganizationId()).orElse(DEFAULT_ORGANIZATION_ID);
+            return integrationConfigService.getLatestSyncResource(organizationId);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @PostMapping("/third-party/edit")

@@ -141,7 +141,7 @@
     emit('clickMore', item);
   }
 
-  const listRef: Ref = ref(null);
+  const listRef = ref<import('vue').ComponentPublicInstance | null>(null);
   // TODO 暂时还未做拖拽
   watch(
     listData.value,

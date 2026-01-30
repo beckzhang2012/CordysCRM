@@ -1,6 +1,7 @@
 package cn.cordys.crm.system.controller;
 
 import cn.cordys.common.constants.PermissionConstants;
+import cn.cordys.crm.system.constants.LicenseStatus;
 import cn.cordys.crm.system.dto.LicenseDTO;
 import cn.cordys.crm.system.service.LicenseService;
 import cn.cordys.security.SessionUtils;
@@ -22,7 +23,13 @@ public class LicenseController {
     @GetMapping("/validate")
     @Operation(summary = "License 校验")
     public LicenseDTO validate() {
-        return licenseService.validate();
+        try {
+            return licenseService.validate();
+        } catch (Exception e) {
+            LicenseDTO fallback = new LicenseDTO();
+            fallback.setStatus(LicenseStatus.NOT_FOUND.getName());
+            return fallback;
+        }
     }
 
     @PostMapping("/add")

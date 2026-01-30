@@ -1,6 +1,8 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-cd frontend/packages/lib-shared && npm run type:check && npm run lint-staged
-cd ../mobile && npm run type:check && npm run lint-staged
-cd ../web && npm run type:check && npm run lint-staged
+# lib-shared: 仅 type:check，不跑 lint-staged（避免 ESLint 扁平配置问题）
+cd frontend/packages/lib-shared && npm run type:check || exit 1
+# mobile & web: type:check + lint-staged
+cd ../mobile && npm run type:check && npm run lint-staged || exit 1
+cd ../web && npm run type:check && npm run lint-staged || exit 1

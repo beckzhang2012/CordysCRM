@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtReminderMapper">
+
+    <select id="list" resultType="cn.cordys.crm.customer.dto.response.ReminderListResponse">
+        select r.id, r.customer_id, r.customer_name, r.reminder_time, r.content, r.status, r.receiver, r.create_user, r.create_time
+        from cus_reminder r
+        where r.organization_id = #{orgId}
+        and r.receiver = #{userId}
+        <if test="request.customerId != null and request.customerId != ''">
+            and r.customer_id = #{request.customerId}
+        </if>
+        <if test="request.status != null and request.status != ''">
+            and r.status = #{request.status}
+        </if>
+        <if test="request.content != null and request.content != ''">
+            and r.content like concat('%', #{request.content}, '%')
+        </if>
+        order by r.reminder_time desc
+    </select>
+
+    <select id="selectPendingReminders" resultType="cn.cordys.crm.customer.domain.Reminder">
+        select r.id, r.customer_id, r.customer_name, r.reminder_time, r.content, r.status, r.receiver, r.organization_id
+        from cus_reminder r
+        where r.organization_id = #{orgId}
+        and r.status = 'PENDING'
+        and r.reminder_time &lt;= #{currentTime}
+    </select>
+
+    <select id="countPendingByUserId" resultType="int">
+        select count(1) from cus_reminder
+        where organization_id = #{orgId}
+        and receiver = #{userId}
+        and status = 'PENDING'
+    </select>
+
+</mapper>

@@ -1,4 +1,8 @@
+import { unref } from 'vue';
+
 import { mergeStyles } from '@lib/shared/method/dom';
+
+import type { Ref } from 'vue';
 
 export interface UseFullScreen {
   isFullScreen: Ref<boolean>;

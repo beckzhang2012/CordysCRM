@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+  import { unref } from 'vue';
   import { DataTableRowKey } from 'naive-ui';
 
   import { FieldDataSourceTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
@@ -166,7 +167,7 @@
   watch(
     () => isFullScreen.value,
     (val) => {
-      emit('toggleFullScreen', val ?? false);
+      emit('toggleFullScreen', unref(val) ?? false);
     }
   );
 </script>

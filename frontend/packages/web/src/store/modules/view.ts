@@ -188,6 +188,7 @@ const useViewStore = defineStore('view', {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log(error);
+        this.customViews = [];
       }
     },
 

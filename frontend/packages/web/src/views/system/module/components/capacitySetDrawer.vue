@@ -9,7 +9,7 @@
   >
     <CrmBatchForm
       ref="batchFormRef"
-      :models="formItemModel"
+      :models="(formItemModel as any)"
       :default-list="form.list"
       :add-text="t('module.businessManage.addRules')"
       validate-when-add
@@ -54,7 +54,7 @@
 
   const form = ref<any>({ list: [] });
 
-  const formItemModel: Ref<FormItemModel[]> = computed(() => {
+  const formItemModel = computed<FormItemModel[]>(() => {
     return [
       {
         path: 'members',

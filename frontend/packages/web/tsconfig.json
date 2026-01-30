@@ -2,11 +2,13 @@
   "extends": "../../tsconfig.json",
   "include": [
     "src/**/*",
+    "config/**/*",
     "types/**/*",
-    "*.d.ts",
+    "*.d.ts"
   ],
   "compilerOptions": {
     "baseUrl": "./",
+    "moduleResolution": "bundler",
     "paths": {
       // 路径映射
       "@/*": [
