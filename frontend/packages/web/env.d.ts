@@ -1,5 +1,12 @@
 /// <reference types="vite/client" />
 
+declare module 'vite-plugin-eslint' {
+  import type { Plugin } from 'vite';
+
+  function eslint(options?: Record<string, unknown>): Plugin;
+  export default eslint;
+}
+
 declare module '*.vue' {
   import { DefineComponent } from 'vue';
 

@@ -1,3 +1,10 @@
+declare global {
+  /** Vite/build-tool env; so import.meta.env is valid in lib-shared */
+  interface ImportMeta {
+    env: Record<string, string | undefined>;
+  }
+}
+
 export interface AnyObject {
   [key: string]: unknown;
 }

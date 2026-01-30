@@ -5,6 +5,9 @@ import { formatTimeValue, getCityPath, getIndustryPath } from './index';
 import type { ModuleField } from '../models/customer';
 import { useI18n } from '../hooks/useI18n';
 
+/** Ref-like type for shared code (avoids depending on vue in lib-shared) */
+type RefLike<T = unknown> = { value: T };
+
 export const linkAllAcceptTypes = [FieldTypeEnum.INPUT, FieldTypeEnum.TEXTAREA];
 export const dataSourceTypes = [FieldTypeEnum.DATA_SOURCE, FieldTypeEnum.DATA_SOURCE_MULTIPLE];
 export const hiddenTypes = [FieldTypeEnum.DIVIDER, FieldTypeEnum.PICTURE, FieldTypeEnum.ATTACHMENT, FieldTypeEnum.LINK];
@@ -145,7 +148,7 @@ export function parseModuleFieldValue(item: FormCreateField, fieldValue: string 
   return value;
 }
 
-export function parseFormDetailValue(item: FormCreateField, form: FormDetail, sourceName?: Ref<string>) {
+export function parseFormDetailValue(item: FormCreateField, form: FormDetail, sourceName?: RefLike<string>) {
   const { t } = useI18n();
   if (item.businessKey && !item.resourceFieldId) {
     // 引用数据源字段使用 id 读取数据，而不是 businessKey

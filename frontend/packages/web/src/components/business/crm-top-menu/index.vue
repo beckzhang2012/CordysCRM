@@ -1,12 +1,12 @@
 <template>
   <n-menu
-    v-model:value="activeMenu"
+    :value="activeMenu ?? undefined"
     class="crm-top-menu"
     mode="horizontal"
     :options="topMenuList"
     :node-props="getNodeProps"
     responsive
-    @update:value="handleSelected"
+    @update:value="(key: string | number | null) => { activeMenu.value = (key as string) ?? null; handleSelected(key as RouteRecordName); }"
   />
 </template>
 

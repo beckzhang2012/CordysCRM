@@ -5,20 +5,17 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "type:check": "tsc --noEmit",
     "lint-staged": "npx lint-staged"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "lint-staged": {
-    "*.{js,ts,jsx,tsx}": [
-      "prettier --write",
-      "eslint --fix"
-    ],
+    "*.{js,ts,jsx,tsx}": ["prettier --write"],
     "*.vue": [
       "stylelint --fix",
-      "prettier --write",
-      "eslint --fix"
+      "prettier --write"
     ],
     "*.{less,css,scss,sass}": [
       "stylelint --fix --custom-syntax postcss-less",
