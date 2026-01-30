@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <select id="list" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        select * from customer_tag
+        where organization_id = #{orgId}
+        <if test="keyword != null and keyword != ''">
+            and name like concat('%', #{keyword}, '%')
+        </if>
+        order by create_time desc
+    </select>
+
+    <insert id="batchInsertRel">
+        insert into customer_tag_rel (id, customer_id, tag_id, organization_id, create_time, create_user, update_time, update_user)
+        values
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (replace(uuid(), '-', ''), #{customerId}, #{tagId}, #{orgId}, ${@java.lang.System@currentTimeMillis()}, null, ${@java.lang.System@currentTimeMillis()}, null)
+        </foreach>
+    </insert>
+
+    <delete id="deleteRelByCustomerId">
+        delete from customer_tag_rel where customer_id = #{customerId}
+    </delete>
+
+    <delete id="deleteRelByCustomerIdAndTagIds">
+        delete from customer_tag_rel
+        where customer_id = #{customerId}
+        and tag_id in
+        <foreach collection="tagIds" item="tagId" open="(" close=")" separator=",">
+            #{tagId}
+        </foreach>
+    </delete>
+
+    <select id="selectTagIdsByCustomerId" resultType="java.lang.String">
+        select tag_id from customer_tag_rel where customer_id = #{customerId}
+    </select>
+
+    <select id="selectTagsByCustomerId" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        select ct.* from customer_tag ct
+        inner join customer_tag_rel ctr on ct.id = ctr.tag_id
+        where ctr.customer_id = #{customerId}
+    </select>
+
+    <select id="getTagOptions" resultType="cn.cordys.common.dto.OptionDTO">
+        select id as value, name as label from customer_tag
+        where organization_id = #{orgId}
+        <if test="keyword != null and keyword != ''">
+            and name like concat('%', #{keyword}, '%')
+        </if>
+        order by name
+    </select>
+
+    <select id="checkNameExists" resultType="boolean">
+        select count(*) > 0 from customer_tag
+        where organization_id = #{orgId} and name = #{name}
+        <if test="id != null and id != ''">
+            and id != #{id}
+        </if>
+    </select>
+
+    <select id="selectCustomerIdsByTagIds" resultType="java.lang.String">
+        select distinct customer_id from customer_tag_rel
+        where organization_id = #{orgId}
+        and tag_id in
+        <foreach collection="tagIds" item="tagId" open="(" close=")" separator=",">
+            #{tagId}
+        </foreach>
+    </select>
+
+</mapper>

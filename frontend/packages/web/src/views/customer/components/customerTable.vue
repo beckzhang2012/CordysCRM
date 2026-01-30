@@ -160,7 +160,13 @@
   import customerOverviewDrawer from './customerOverviewDrawer.vue';
   import mergeAccountModal from './mergeAccountModal.vue';
 
-  import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer } from '@/api/modules';
+  import {
+    batchDeleteCustomer,
+    batchTransferCustomer,
+    deleteCustomer,
+    getCustomerTagOptions,
+    updateCustomer,
+  } from '@/api/modules';
   import { baseFilterConfigList } from '@/config/clue';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import useFormCreateTable from '@/hooks/useFormCreateTable';
@@ -657,6 +663,21 @@
       title: t('customer.lastFollowUpDate'),
       dataIndex: 'followTime',
       type: FieldTypeEnum.TIME_RANGE_PICKER,
+    },
+    {
+      title: t('customer.tag'),
+      dataIndex: 'tagIds',
+      type: FieldTypeEnum.SELECT_MULTIPLE,
+      selectProps: {
+        remote: true,
+        remoteMethod: async (searchKeyword: string) => {
+          const res = await getCustomerTagOptions(searchKeyword);
+          return res.map((item: any) => ({
+            label: item.name,
+            value: item.id,
+          }));
+        },
+      },
     },
     ...baseFilterConfigList,
   ]);
