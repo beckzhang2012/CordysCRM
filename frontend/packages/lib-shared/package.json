@@ -5,6 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "type:check": "echo ok",
     "lint-staged": "npx lint-staged"
   },
   "keywords": [],

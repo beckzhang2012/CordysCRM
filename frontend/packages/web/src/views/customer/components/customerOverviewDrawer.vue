@@ -107,6 +107,13 @@
       />
     </template>
   </CrmOverviewDrawer>
+  <reminderModal
+    v-model:show="showReminderModal"
+    :customer-id="props.sourceId"
+    :customer-name="sourceName"
+    @saved="handleReminderSaved"
+    @cancel="handleReminderCancel"
+  />
 </template>
 
 <script setup lang="ts">
@@ -130,6 +137,7 @@
   import customerRelation from './customerRelation.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
+  import reminderModal from './reminderModal.vue';
 
   import { deleteCustomer, getCustomerHeaderList, updateCustomer } from '@/api/modules';
   import useModal from '@/hooks/useModal';
@@ -173,6 +181,14 @@
         ghost: true,
         class: 'n-btn-outline-primary',
         permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
+      },
+      {
+        label: t('customer.setReminder'),
+        key: 'setReminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+        permission: ['CUSTOMER_MANAGEMENT:READ'],
       },
       {
         label: t('common.transfer'),
@@ -316,6 +332,8 @@
 
   // 移入公海
   const showMoveModal = ref(false);
+  const showReminderModal = ref(false);
+  
   function handleMoveToPublicPool() {
     showMoveModal.value = true;
   }
@@ -327,6 +345,8 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      showReminderModal.value = true;
     }
   }
 
@@ -343,6 +363,14 @@
   function handleDescriptionInit(_collaborationType?: CollaborationType, _sourceName?: string) {
     collaborationType.value = _collaborationType;
     sourceName.value = _sourceName || '';
+  }
+
+  function handleReminderSaved() {
+    Message.success(t('customer.reminderSetSuccess'));
+  }
+
+  function handleReminderCancel() {
+    // 提醒取消处理
   }
 </script>
 
