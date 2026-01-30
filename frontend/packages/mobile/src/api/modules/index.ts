@@ -232,6 +232,15 @@ export const {
   getGlobalOpenSeaCustomerList,
   getGlobalModuleCount,
   moveCustomerToPool,
+  // 客户标签相关API
+  addCustomerTag,
+  updateCustomerTag,
+  deleteCustomerTag,
+  getCustomerTagList,
+  getCustomerTag,
+  relateCustomerTags,
+  getCustomerTags,
+  getCustomerIdsByTagId,
 } = customerApi;
 
 export const {
@@ -342,3 +351,5 @@ export const {
 export const { isLogin, signout, getKey, login, getThirdOauthCallback, getThirdCallback } = loginApi;
 
 export const { getLicense, addLicense } = licenseApi;
+
+export { useCustomerApi };

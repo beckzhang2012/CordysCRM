@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.CustomerTagRelationMapper">
+
+    <resultMap id="BaseResultMap" type="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="customer_id" property="customerId" jdbcType="VARCHAR"/>
+        <result column="tag_id" property="tagId" jdbcType="VARCHAR"/>
+        <result column="organization_id" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, customer_id, tag_id, organization_id, create_by, create_time, update_time
+    </sql>
+
+    <select id="selectCustomerTagRelationsByCustomerId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM crm_customer_tag_relation
+        WHERE customer_id = #{customerId}
+    </select>
+
+    <select id="selectCustomerIdsByTagId" resultType="java.lang.String">
+        SELECT DISTINCT customer_id
+        FROM crm_customer_tag_relation
+        WHERE tag_id = #{tagId}
+    </select>
+
+    <insert id="insertCustomerTagRelation" parameterType="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        INSERT INTO crm_customer_tag_relation (
+            id, customer_id, tag_id, organization_id, create_by, create_time, update_time
+        ) VALUES (
+            #{customerTagRelation.id}, #{customerTagRelation.customerId}, #{customerTagRelation.tagId},
+            #{customerTagRelation.organizationId}, #{customerTagRelation.createBy}, 
+            #{customerTagRelation.createTime}, #{customerTagRelation.updateTime}
+        )
+    </insert>
+
+    <delete id="deleteCustomerTagRelation">
+        DELETE FROM crm_customer_tag_relation 
+        WHERE customer_id = #{customerId} AND tag_id = #{tagId}
+    </delete>
+
+    <delete id="deleteCustomerTagRelationsByCustomerId">
+        DELETE FROM crm_customer_tag_relation 
+        WHERE customer_id = #{customerId}
+    </delete>
+
+</mapper>

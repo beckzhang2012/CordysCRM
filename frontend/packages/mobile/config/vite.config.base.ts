@@ -53,6 +53,10 @@ export default defineConfig({
         replacement: resolve(__dirname, '../src'),
       },
       {
+        find: '@lib/shared',
+        replacement: resolve(__dirname, '../../lib-shared'),
+      },
+      {
         find: 'vue-i18n',
         replacement: 'vue-i18n/dist/vue-i18n.esm-bundler.js', // 解决 vue-i18n 依赖包报错
       },

@@ -24,6 +24,9 @@ public class CustomerPageRequest extends BasePageRequest {
     @Schema(description = "查询需要关联的公海客户传参")
     private List<String> transitionPoolIds;
 
-	@Schema(description = "关联客户数据权限")
+    @Schema(description = "关联客户数据权限")
 	private DeptDataPermissionDTO transitionDataPermission;
+    
+    @Schema(description = "标签ID列表")
+    private List<String> tagIds;
 }

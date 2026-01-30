@@ -361,3 +361,42 @@ export interface MergeAccountParams {
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
 }
+
+// 客户标签相关类型
+export interface CustomerTagAddRequest {
+  name: string;
+  color?: string;
+  description?: string;
+}
+
+export interface CustomerTagUpdateRequest {
+  id: string;
+  name?: string;
+  color?: string;
+  description?: string;
+}
+
+export interface CustomerTagPageRequest {
+  pageNum: number;
+  pageSize: number;
+  name?: string;
+}
+
+export interface CustomerTagRelationRequest {
+  customerId: string;
+  tagIds: string[];
+}
+
+export interface CustomerTagResponse {
+  id: string;
+  name: string;
+  color?: string;
+  description?: string;
+  createTime?: number;
+  createBy?: string;
+}
+
+export interface CustomerTagListResponse {
+  customerId: string;
+  tags: CustomerTagResponse[];
+}

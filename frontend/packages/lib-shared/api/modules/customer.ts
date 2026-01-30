@@ -120,6 +120,15 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  // 客户标签
+  AddCustomerTagUrl,
+  UpdateCustomerTagUrl,
+  DeleteCustomerTagUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagUrl,
+  RelateCustomerTagsUrl,
+  GetCustomerTagsUrl,
+  GetCustomerIdsByTagIdUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -174,6 +183,13 @@ import type {
   UpdateCustomerParams,
   UpdateCustomerRelationItemParams,
   UpdateFollowPlanStatusParams,
+  // 客户标签相关类型
+  CustomerTagAddRequest,
+  CustomerTagUpdateRequest,
+  CustomerTagPageRequest,
+  CustomerTagRelationRequest,
+  CustomerTagResponse,
+  CustomerTagListResponse,
 } from '@lib/shared/models/customer';
 import type { CluePoolItem, FormDesignConfigDetailParams, OpportunityItem } from '@lib/shared/models/system/module';
 import { ValidateInfo } from '@lib/shared/models/system/org';
@@ -770,6 +786,46 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  // 添加客户标签
+  function addCustomerTag(data: CustomerTagAddRequest) {
+    return CDR.post({ url: AddCustomerTagUrl, data });
+  }
+
+  // 更新客户标签
+  function updateCustomerTag(data: CustomerTagUpdateRequest) {
+    return CDR.post({ url: UpdateCustomerTagUrl, data });
+  }
+
+  // 删除客户标签
+  function deleteCustomerTag(id: string) {
+    return CDR.get({ url: `${DeleteCustomerTagUrl}/${id}` });
+  }
+
+  // 获取客户标签列表
+  function getCustomerTagList(data: CustomerTagPageRequest) {
+    return CDR.post<CommonList<CustomerTagResponse>>({ url: GetCustomerTagListUrl, data });
+  }
+
+  // 获取客户标签详情
+  function getCustomerTag(id: string) {
+    return CDR.get<CustomerTagResponse>({ url: `${GetCustomerTagUrl}/${id}` });
+  }
+
+  // 关联客户标签
+  function relateCustomerTags(data: CustomerTagRelationRequest) {
+    return CDR.post({ url: RelateCustomerTagsUrl, data });
+  }
+
+  // 获取客户的标签列表
+  function getCustomerTags(customerId: string) {
+    return CDR.get<CustomerTagListResponse>({ url: `${GetCustomerTagsUrl}/${customerId}` });
+  }
+
+  // 根据标签ID获取客户ID列表
+  function getCustomerIdsByTagId(tagId: string) {
+    return CDR.get<string[]>({ url: `${GetCustomerIdsByTagIdUrl}/${tagId}` });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -891,5 +947,14 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    // 客户标签相关API
+    addCustomerTag,
+    updateCustomerTag,
+    deleteCustomerTag,
+    getCustomerTagList,
+    getCustomerTag,
+    relateCustomerTags,
+    getCustomerTags,
+    getCustomerIdsByTagId,
   };
 }

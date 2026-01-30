@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.CustomerTagMapper">
+
+    <resultMap id="BaseResultMap" type="cn.cordys.crm.customer.domain.CustomerTag">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="color" property="color" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="organization_id" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="CustomerTagListResponseMap" type="cn.cordys.crm.customer.dto.response.CustomerTagListResponse">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="color" property="color" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, color, description, organization_id, create_by, create_time, update_time
+    </sql>
+
+    <select id="selectCustomerTagList" resultMap="CustomerTagListResponseMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM crm_customer_tag
+        <where>
+            organization_id = #{request.organizationId}
+            <if test="request.name != null and request.name != ''">
+                AND name LIKE CONCAT('%', #{request.name}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCustomerTagById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM crm_customer_tag
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertCustomerTag" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        INSERT INTO crm_customer_tag (
+            id, name, color, description, organization_id, create_by, create_time, update_time
+        ) VALUES (
+            #{customerTag.id}, #{customerTag.name}, #{customerTag.color}, #{customerTag.description},
+            #{customerTag.organizationId}, #{customerTag.createBy}, #{customerTag.createTime}, #{customerTag.updateTime}
+        )
+    </insert>
+
+    <update id="updateCustomerTag" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        UPDATE crm_customer_tag
+        <set>
+            <if test="customerTag.name != null">name = #{customerTag.name},</if>
+            <if test="customerTag.color != null">color = #{customerTag.color},</if>
+            <if test="customerTag.description != null">description = #{customerTag.description},</if>
+            update_time = #{customerTag.updateTime}
+        </set>
+        WHERE id = #{customerTag.id}
+    </update>
+
+    <delete id="deleteCustomerTagById">
+        DELETE FROM crm_customer_tag WHERE id = #{id}
+    </delete>
+
+</mapper>
