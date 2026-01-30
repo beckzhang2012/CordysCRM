@@ -42,6 +42,7 @@
             </n-popselect>
           </template>
           <template #alertsSlot>
+            <CrmReminderNotification />
             <n-button class="p-[8px]" quaternary @click="showMessage">
               <n-badge value="1" dot :show="showBadge">
                 <CrmIcon type="iconicon-alarmclock" :size="16" />
@@ -186,6 +187,7 @@
   import { lastScopedOptions } from '@/components/business/crm-duplicate-check-drawer/config';
   import CrmDuplicateCheckDrawer from '@/components/business/crm-duplicate-check-drawer/index.vue';
   import CrmTopMenu from '@/components/business/crm-top-menu/index.vue';
+  import CrmReminderNotification from '@/components/business/crm-reminder-notification/index.vue';
   import licenseDrawer from '@/views/system/license/licenseDrawer.vue';
   import MessageDrawer from '@/views/system/message/components/messageDrawer.vue';
 
