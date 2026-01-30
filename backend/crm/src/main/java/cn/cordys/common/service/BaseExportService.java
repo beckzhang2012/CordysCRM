@@ -22,6 +22,8 @@ import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
 import cn.cordys.crm.system.excel.domain.MergeResult;
 import cn.cordys.crm.system.excel.handler.CustomHeadColWidthStyleStrategy;
 import cn.cordys.crm.system.excel.handler.SummaryMergeHandler;
+import cn.cordys.crm.system.queue.ExportTaskQueueManager;
+import cn.cordys.crm.system.queue.dto.ExportTaskMessage;
 import cn.cordys.crm.system.service.ExportTaskService;
 import cn.cordys.crm.system.service.LogService;
 import cn.cordys.crm.system.service.ModuleFormCacheService;
@@ -58,6 +60,8 @@ public abstract class BaseExportService {
     private LogService logService;
     @Resource
     private ExportTaskService exportTaskService;
+    @Resource
+    private ExportTaskQueueManager queueManager;
 
 
     public Map<String, BaseField> getFieldConfigMap(String formKey, String orgId) {
@@ -493,8 +497,19 @@ public abstract class BaseExportService {
         String fileId = IDGenerator.nextStr();
         ExportTask exportTask = exportTaskService.saveTask(currentOrg, fileId, currentUser, exportType, exportFileName);
 
-        runExport(currentOrg, currentUser, logModule, locale, exportTask, exportFileName,
-                () -> executor.execute(exportTask));
+        ExportTaskMessage message = new ExportTaskMessage();
+        message.setTaskId(exportTask.getId());
+        message.setFileId(fileId);
+        message.setFileName(exportFileName);
+        message.setOrgId(currentOrg);
+        message.setUserId(currentUser);
+        message.setExportType(ExportConstants.ExportType.valueOf(exportType));
+        message.setStatus(ExportConstants.ExportStatus.PREPARED);
+        message.setLocale(locale);
+        message.setLogModule(logModule);
+        message.setBatchSize(EXPORT_MAX_COUNT);
+
+        queueManager.enqueueTask(message);
 
         return exportTask.getId();
     }
