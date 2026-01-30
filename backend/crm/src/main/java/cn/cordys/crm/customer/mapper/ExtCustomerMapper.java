@@ -29,6 +29,12 @@ public interface ExtCustomerMapper {
     List<CustomerListResponse> list(@Param("request") CustomerPageRequest request, @Param("orgId") String orgId,
                                     @Param("userId") String userId, @Param("dataPermission") DeptDataPermissionDTO deptDataPermission);
 
+    /**
+     * 统计客户列表数量（与 list 相同条件）
+     */
+    long countList(@Param("request") CustomerPageRequest request, @Param("orgId") String orgId,
+                   @Param("userId") String userId, @Param("dataPermission") DeptDataPermissionDTO deptDataPermission);
+
     List<CustomerListResponse> sourceList(@Param("request") CustomerPageRequest request, @Param("orgId") String orgId,
                                           @Param("userId") String userId, @Param("dataPermission") DeptDataPermissionDTO deptDataPermission);
 

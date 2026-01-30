@@ -87,4 +87,10 @@ public class CustomerListResponse {
 
     @Schema(description = "协作类型(只读/协作),为空则不是协作人员")
     private String collaborationType;
+
+    @Schema(description = "电话(来自联系人或自定义字段)")
+    private String phone;
+
+    @Schema(description = "邮箱(来自联系人或自定义字段)")
+    private String email;
 }
