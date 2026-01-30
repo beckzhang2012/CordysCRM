@@ -7,6 +7,6 @@ public class ExportConstants {
     }
 
     public enum ExportStatus {
-        PREPARED, STOP, SUCCESS, ERROR
+        PREPARED, PROCESSING, SUCCESS, ERROR, STOP
     }
 }
