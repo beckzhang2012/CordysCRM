@@ -2,6 +2,7 @@ package cn.cordys.common.resolver.field;
 
 import cn.cordys.common.util.TimeUtils;
 import cn.cordys.crm.system.dto.field.DateTimeField;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 
 import java.time.*;
@@ -19,6 +20,17 @@ public class DateTimeResolver extends AbstractModuleFieldResolver<DateTimeField>
     public static final String DATETIME = "datetime";
     public static final String MONTH = "month";
 
+    private static final DateTimeFormatter TEXT_TO_VALUE_FORMATTER = new DateTimeFormatterBuilder()
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d H:m:s"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy/M/d H:m:s"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d H:m"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy/M/d H:m"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy/M/d"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy-M"))
+            .appendOptional(DateTimeFormatter.ofPattern("yyyy/M"))
+            .toFormatter();
+
     @Override
     public void validate(DateTimeField dateTimeField, Object value) {
         validateRequired(dateTimeField, value);
@@ -34,11 +46,17 @@ public class DateTimeResolver extends AbstractModuleFieldResolver<DateTimeField>
 
     @Override
     public Object convertToValue(DateTimeField dateTimeField, String value) {
+        if (value == null || value.isBlank() || Strings.CI.equals(value, "null")) {
+            return null;
+        }
         return parse2Long(value);
     }
 
     @Override
     public Object transformToValue(DateTimeField dateTimeField, String value) {
+        if (value == null || value.isBlank() || Strings.CI.equals(value, "null")) {
+            return StringUtils.EMPTY;
+        }
         if (Strings.CI.equals(dateTimeField.getDateType(), DATE)) {
             return TimeUtils.getDataStr(Long.valueOf(value));
         }
@@ -53,18 +71,11 @@ public class DateTimeResolver extends AbstractModuleFieldResolver<DateTimeField>
 
     @Override
     public Object textToValue(DateTimeField field, String text) {
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d H:m:s"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy/M/d H:m:s"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d H:m"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy/M/d H:m"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy/M/d"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy-M"))
-                .appendOptional(DateTimeFormatter.ofPattern("yyyy/M"))
-                .toFormatter();
+        if (StringUtils.isBlank(text) || Strings.CI.equals(text, "null")) {
+            return null;
+        }
 
-        TemporalAccessor parsed = formatter.parseBest(text,
+        TemporalAccessor parsed = TEXT_TO_VALUE_FORMATTER.parseBest(text,
                 LocalDateTime::from,
                 LocalDate::from,
                 YearMonth::from);

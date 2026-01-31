@@ -514,20 +514,30 @@ export function openDocumentLink(url: string) {
  * @param value 时间戳
  * @param type 类型
  */
-export function formatTimeValue(value: string | number, type?: FormCreateFieldDateType) {
-  if (value) {
-    const date = dayjs(Number(value));
-    switch (type) {
-      case 'month':
-        return date.format('YYYY-MM');
-      case 'date':
-        return date.format('YYYY-MM-DD');
-      case 'datetime':
-      default:
-        return date.format('YYYY-MM-DD HH:mm:ss');
-    }
+export function formatTimeValue(value: string | number | null | undefined, type?: FormCreateFieldDateType) {
+  if (value === null || value === undefined || value === '') {
+    return '-';
   }
-  return '-';
+  if (typeof value === 'string' && (value === 'null' || value === 'undefined')) {
+    return '-';
+  }
+  const timestamp = Number(value);
+  if (isNaN(timestamp)) {
+    return '-';
+  }
+  const date = dayjs(timestamp);
+  if (!date.isValid()) {
+    return '-';
+  }
+  switch (type) {
+    case 'month':
+      return date.format('YYYY-MM');
+    case 'date':
+      return date.format('YYYY-MM-DD');
+    case 'datetime':
+    default:
+      return date.format('YYYY-MM-DD HH:mm:ss');
+  }
 }
 
 /**
