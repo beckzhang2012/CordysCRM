@@ -10,7 +10,7 @@ import {
   type FormLinkScenarioEnum,
 } from '@lib/shared/enums/formDesignEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
-import { getCityPath, getIndustryPath, safeFractionConvert, safeDateFormat } from '@lib/shared/method';
+import { getCityPath, getIndustryPath, safeDateFormat, safeFractionConvert } from '@lib/shared/method';
 import {
   dataSourceTypes,
   departmentTypes,
