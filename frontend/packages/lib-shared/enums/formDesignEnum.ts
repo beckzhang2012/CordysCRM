@@ -72,6 +72,7 @@ export enum FieldRuleEnum {
   REQUIRED = 'required',
   UNIQUE = 'unique',
   NUMBER_RANGE = 'numberRange',
+  DATE_VALID = 'dateValid',
 }
 
 export enum FieldDataSourceTypeEnum {

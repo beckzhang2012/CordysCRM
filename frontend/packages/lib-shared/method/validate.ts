@@ -54,6 +54,41 @@ export function validatePassword(password: string): boolean {
   return validatePasswordLength(password) && validateWordPassword(password);
 }
 
+/**
+ * 校验日期值
+ * @param value 日期值（时间戳或日期对象）
+ * @returns boolean
+ */
+export function validateDate(value: any): boolean {
+  if (value === null || value === undefined || value === '') {
+    return true; // 空值由required规则处理
+  }
+  
+  try {
+    const date = new Date(value);
+    return !isNaN(date.getTime());
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * 校验日期范围
+ * @param startDate 开始日期
+ * @param endDate 结束日期
+ * @returns boolean
+ */
+export function validateDateRange(startDate: any, endDate: any): boolean {
+  if (!validateDate(startDate) || !validateDate(endDate)) {
+    return false;
+  }
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  return start.getTime() <= end.getTime();
+}
+
 export function getPatternByAreaCode(code: string): RegExp | null {
   switch (code) {
     case '+86': // 中国大陆
