@@ -32,14 +32,33 @@
       </div>
     </n-scrollbar>
     <div class="crm-form-create-footer" :class="formConfig.optBtnPos">
-      <n-button v-if="props.isEdit" type="primary" @click="handleSave(false)">
+      <n-button
+        v-if="props.isEdit"
+        type="primary"
+        :loading="isSubmitting"
+        :disabled="isSubmitting"
+        @click="handleSave(false)"
+      >
         {{ t('common.update') }}
       </n-button>
       <template v-else>
-        <n-button v-if="formConfig.optBtnContent[0].enable" type="primary" @click="handleSave(false)">
+        <n-button
+          v-if="formConfig.optBtnContent[0].enable"
+          type="primary"
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
+          @click="handleSave(false)"
+        >
           {{ formConfig.optBtnContent[0].text }}
         </n-button>
-        <n-button v-if="formConfig.optBtnContent[1].enable" type="primary" ghost @click="handleSave(true)">
+        <n-button
+          v-if="formConfig.optBtnContent[1].enable"
+          type="primary"
+          ghost
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
+          @click="handleSave(true)"
+        >
           {{ formConfig.optBtnContent[1].text }}
         </n-button>
       </template>
@@ -279,31 +298,52 @@
     });
   }
 
+  // 防抖处理和提交状态
+  const isSubmitting = ref(false);
+  const debounceTimer = ref<NodeJS.Timeout | null>(null);
+
   function handleSave(isContinue = false) {
-    formRef.value?.validate((errors) => {
-      if (!errors) {
-        const result = cloneDeep(formDetail.value);
-        fieldList.value.forEach((item) => {
-          if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
-            item.subFields.forEach((subField) => {
-              transformSubFieldsValue(subField, result[item.id]);
-            });
-          } else {
-            transformFieldValue(item, result, item.id);
+    // 如果正在提交，直接返回
+    if (isSubmitting.value) {
+      return;
+    }
+
+    // 清除之前的定时器
+    if (debounceTimer.value) {
+      clearTimeout(debounceTimer.value);
+    }
+
+    // 设置防抖，300ms后执行
+    debounceTimer.value = setTimeout(() => {
+      formRef.value?.validate((errors) => {
+        if (!errors) {
+          // 设置提交状态为true
+          isSubmitting.value = true;
+          const result = cloneDeep(formDetail.value);
+          fieldList.value.forEach((item) => {
+            if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
+              item.subFields.forEach((subField) => {
+                transformSubFieldsValue(subField, result[item.id]);
+              });
+            } else {
+              transformFieldValue(item, result, item.id);
+            }
+          });
+          saveForm(result, isContinue, (_isContinue, res) => {
+            // 重置提交状态
+            isSubmitting.value = false;
+            emit('saved', isContinue, res);
+          });
+        } else {
+          // 滚动到报错的位置
+          const firstErrorId = errors[0]?.[0]?.field;
+          if (firstErrorId) {
+            const fieldElement = document.getElementById(firstErrorId);
+            fieldElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-        });
-        saveForm(result, isContinue, (_isContinue, res) => {
-          emit('saved', isContinue, res);
-        });
-      } else {
-        // 滚动到报错的位置
-        const firstErrorId = errors[0]?.[0]?.field;
-        if (firstErrorId) {
-          const fieldElement = document.getElementById(firstErrorId);
-          fieldElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }
-    });
+      });
+    }, 300);
   }
 
   watch(
