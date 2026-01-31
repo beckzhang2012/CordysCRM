@@ -12,6 +12,29 @@ import { getLocalStorage } from '@lib/shared/method/local-storage';
 import industryOptions from '@cordys/web/src/components/pure/crm-industry-select/config';
 
 /**
+ * 安全格式化日期，处理null和undefined值
+ * @param value 日期值
+ * @param format 格式化模板，默认为 'YYYY-MM-DD HH:mm:ss'
+ * @param defaultValue 默认值，当日期为空时返回，默认为 '-'
+ * @returns 格式化后的日期字符串或默认值
+ */
+export function safeDateFormat(
+  value: any, 
+  format: string = 'YYYY-MM-DD HH:mm:ss', 
+  defaultValue: string = '-'
+): string {
+  if (value === null || value === undefined || value === '') {
+    return defaultValue;
+  }
+  try {
+    return dayjs(value).format(format);
+  } catch (error) {
+    console.error('日期格式化错误:', error);
+    return defaultValue;
+  }
+}
+
+/**
  * 递归深度合并
  * @param src 源对象
  * @param target 待合并的目标对象

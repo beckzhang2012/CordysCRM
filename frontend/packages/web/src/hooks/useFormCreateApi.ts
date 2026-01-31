@@ -10,7 +10,7 @@ import {
   type FormLinkScenarioEnum,
 } from '@lib/shared/enums/formDesignEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
-import { getCityPath, getIndustryPath, safeFractionConvert } from '@lib/shared/method';
+import { getCityPath, getIndustryPath, safeFractionConvert, safeDateFormat } from '@lib/shared/method';
 import {
   dataSourceTypes,
   departmentTypes,
@@ -348,7 +348,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
 
   function formatInternalFieldValue(key: string, value: any) {
     if (key.includes('Time')) {
-      return value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-';
+      return safeDateFormat(value, 'YYYY-MM-DD HH:mm:ss');
     }
     if (key === 'enable') {
       return value ? t('common.open') : t('common.close');
@@ -611,11 +611,11 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
               } else if (linkField.type === FieldTypeEnum.DATE_TIME) {
                 // 联动的字段是日期时间则转换
                 if (linkField.dateType === 'month') {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM');
+                  formDetail.value[field.id] = safeDateFormat(linkField.value, 'YYYY-MM');
                 } else if (linkField.dateType === 'date') {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM-DD');
+                  formDetail.value[field.id] = safeDateFormat(linkField.value, 'YYYY-MM-DD');
                 } else {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM-DD HH:mm:ss');
+                  formDetail.value[field.id] = safeDateFormat(linkField.value, 'YYYY-MM-DD HH:mm:ss');
                 }
               } else if (linkField.type === FieldTypeEnum.LOCATION) {
                 // 联动的字段是省市区则填充城市路径

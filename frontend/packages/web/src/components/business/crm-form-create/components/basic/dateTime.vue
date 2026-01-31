@@ -36,6 +36,8 @@
   import { NDatePicker, NDivider, NFormItem } from 'naive-ui';
 
   import type { FormConfig } from '@lib/shared/models/system/module';
+  import { FieldRuleEnum } from '@lib/shared/enums/formDesignEnum';
+  import { validateDate } from '@lib/shared/method/validate';
 
   import { FormCreateField } from '../../types';
 
@@ -55,6 +57,31 @@
   const value = defineModel<null | number | [number, number]>('value', {
     default: null,
   });
+
+  // 添加日期验证规则（使用 fieldValue 避免与上层 value 冲突）
+  const dateValidator = (_rule: any, fieldValue: any) => {
+    if (fieldValue === null || fieldValue === undefined || fieldValue === '') {
+      return true; // 空值由required规则处理
+    }
+
+    if (!validateDate(fieldValue)) {
+      return new Error('请输入有效的日期');
+    }
+
+    return true;
+  };
+
+  // 将日期验证规则添加到字段配置中
+  if (props.fieldConfig.rules) {
+    const hasDateValidator = props.fieldConfig.rules.some(rule => rule.key === FieldRuleEnum.DATE_VALID);
+    if (!hasDateValidator) {
+      props.fieldConfig.rules.push({
+        key: FieldRuleEnum.DATE_VALID,
+        validator: dateValidator,
+        trigger: ['change', 'blur'],
+      });
+    }
+  }
 
   watch(
     () => props.fieldConfig.defaultValue,
