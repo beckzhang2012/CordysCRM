@@ -5,6 +5,7 @@ import cn.cordys.common.constants.InternalUserView;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.dto.*;
 import cn.cordys.common.dto.chart.ChartResult;
+import cn.cordys.common.idempotent.IdempotentUtil;
 import cn.cordys.common.pager.PageUtils;
 import cn.cordys.common.pager.Pager;
 import cn.cordys.common.pager.PagerWithOption;
@@ -38,6 +39,7 @@ import com.github.pagehelper.PageHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -73,6 +75,8 @@ public class CustomerController {
     private ContractService contractService;
     @Resource
     private ContractPaymentPlanService contractPaymentPlanService;
+    @Resource
+    private IdempotentUtil idempotentUtil;
 
     @GetMapping("/module/form")
     @RequiresPermissions(value = {PermissionConstants.CUSTOMER_MANAGEMENT_READ, PermissionConstants.CUSTOMER_MANAGEMENT_POOL_READ}, logical = Logical.OR)
@@ -101,8 +105,19 @@ public class CustomerController {
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_ADD)
     @Operation(summary = "添加客户")
-    public Customer add(@Validated @RequestBody CustomerAddRequest request) {
-        return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+    public Customer add(HttpServletRequest request, @Validated @RequestBody CustomerAddRequest addRequest) {
+        // 幂等性校验，防止重复提交
+        if (!idempotentUtil.checkIdempotent(request, 5)) {
+            throw new RuntimeException("请勿重复提交");
+        }
+        
+        try {
+            return customerService.add(addRequest, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        } catch (Exception e) {
+            // 如果发生异常，删除幂等性校验的键，允许用户重新提交
+            idempotentUtil.removeIdempotentKey(request);
+            throw e;
+        }
     }
 
     @PostMapping("/update")

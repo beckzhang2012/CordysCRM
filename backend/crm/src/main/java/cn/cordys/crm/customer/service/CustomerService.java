@@ -390,6 +390,12 @@ public class CustomerService {
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
     public Customer add(CustomerAddRequest request, String userId, String orgId) {
+        // 幂等性校验：检查是否存在相同名称的客户
+        Customer existingCustomer = checkDuplicateCustomer(request.getName(), orgId);
+        if (existingCustomer != null) {
+            throw new GenericException(CrmHttpResultCode.CUSTOMER_ALREADY_EXISTS, "客户已存在");
+        }
+        
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);
@@ -415,6 +421,24 @@ public class CustomerService {
                 NotificationConstants.Event.CUSTOMER_ADD, customer.getName(), userId,
                 orgId, List.of(customer.getOwner()), true);
         return customer;
+    }
+    
+    /**
+     * 检查重复客户
+     * @param name 客户名称
+     * @param orgId 组织ID
+     * @return 重复的客户，如果没有则返回null
+     */
+    private Customer checkDuplicateCustomer(String name, String orgId) {
+        if (StringUtils.isBlank(name)) {
+            return null;
+        }
+        
+        Customer queryCustomer = new Customer();
+        queryCustomer.setName(name);
+        queryCustomer.setOrganizationId(orgId);
+        
+        return customerMapper.selectOne(queryCustomer);
     }
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.UPDATE, resourceId = "{#request.id}")
