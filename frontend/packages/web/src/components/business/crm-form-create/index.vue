@@ -32,14 +32,25 @@
       </div>
     </n-scrollbar>
     <div class="crm-form-create-footer" :class="formConfig.optBtnPos">
-      <n-button v-if="props.isEdit" type="primary" @click="handleSave(false)">
+      <n-button v-if="props.isEdit" type="primary" :disabled="isSubmitting" @click="handleSave(false)">
         {{ t('common.update') }}
       </n-button>
       <template v-else>
-        <n-button v-if="formConfig.optBtnContent[0].enable" type="primary" @click="handleSave(false)">
+        <n-button
+          v-if="formConfig.optBtnContent[0].enable"
+          type="primary"
+          :disabled="isSubmitting"
+          @click="handleSave(false)"
+        >
           {{ formConfig.optBtnContent[0].text }}
         </n-button>
-        <n-button v-if="formConfig.optBtnContent[1].enable" type="primary" ghost @click="handleSave(true)">
+        <n-button
+          v-if="formConfig.optBtnContent[1].enable"
+          type="primary"
+          ghost
+          :disabled="isSubmitting"
+          @click="handleSave(true)"
+        >
           {{ formConfig.optBtnContent[1].text }}
         </n-button>
       </template>
@@ -109,6 +120,7 @@
     originFormDetail,
     unsaved,
     loading,
+    isSubmitting,
     formCreateTitle,
     initFormConfig,
     initFormDetail,

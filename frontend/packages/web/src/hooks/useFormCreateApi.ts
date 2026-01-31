@@ -64,6 +64,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   const fieldShowControlMap = ref<Record<string, any>>({}); // 表单字段显示控制映射
   const loading = ref(false);
   const unsaved = ref(false);
+  const isSubmitting = ref(false);
   const formConfig = ref<FormConfig>({
     layout: 1,
     labelPos: 'top',
@@ -523,6 +524,9 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       console.log(error);
     } finally {
       loading.value = false;
+      setTimeout(() => {
+        isSubmitting.value = false;
+      }, 300);
     }
   }
 
@@ -1226,7 +1230,11 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     callback?: (_isContinue: boolean, res: any) => void,
     noReset = false
   ) {
+    if (isSubmitting.value) {
+      return;
+    }
     try {
+      isSubmitting.value = true;
       loading.value = true;
       const params: Record<string, any> = {
         ...props.otherSaveParams?.value,
@@ -1290,6 +1298,9 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       console.log(error);
     } finally {
       loading.value = false;
+      setTimeout(() => {
+        isSubmitting.value = false;
+      }, 300);
     }
   }
 
@@ -1306,6 +1317,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     fieldList,
     loading,
     unsaved,
+    isSubmitting,
     formConfig,
     formDetail,
     originFormDetail,
