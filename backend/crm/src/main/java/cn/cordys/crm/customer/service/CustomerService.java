@@ -390,6 +390,7 @@ public class CustomerService {
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
     public Customer add(CustomerAddRequest request, String userId, String orgId) {
+        checkDuplicateCustomer(request.getName(), orgId);
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);
@@ -458,6 +459,21 @@ public class CustomerService {
         customer = customerMapper.selectByPrimaryKey(request.getId());
         baseService.handleUpdateLog(originCustomer, customer, originCustomerFields, request.getModuleFields(), originCustomer.getId(), originCustomer.getName());
         return customer;
+    }
+
+    private void checkDuplicateCustomer(String name, String orgId) {
+        if (StringUtils.isBlank(name)) {
+            return;
+        }
+        LambdaQueryWrapper<Customer> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Customer::getName, name)
+                .eq(Customer::getOrganizationId, orgId);
+        List<Customer> customers = customerMapper.selectListByLambda(wrapper);
+        if (customers != null && !customers.isEmpty()) {
+            throw new GenericException(Translator.get("customer.name.duplicate") != null 
+                ? Translator.get("customer.name.duplicate") 
+                : "客户名称已存在");
+        }
     }
 
     private void updateModuleField(Customer customer, List<BaseModuleFieldValue> moduleFields, String orgId, String userId) {

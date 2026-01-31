@@ -32,7 +32,9 @@ import cn.cordys.crm.system.dto.response.BatchAffectResponse;
 import cn.cordys.crm.system.dto.response.ImportResponse;
 import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
 import cn.cordys.crm.system.service.ModuleFormCacheService;
+import cn.cordys.common.service.IdempotentService;
 import cn.cordys.security.SessionUtils;
+import cn.cordys.common.exception.GenericException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,6 +75,8 @@ public class CustomerController {
     private ContractService contractService;
     @Resource
     private ContractPaymentPlanService contractPaymentPlanService;
+    @Resource
+    private IdempotentService idempotentService;
 
     @GetMapping("/module/form")
     @RequiresPermissions(value = {PermissionConstants.CUSTOMER_MANAGEMENT_READ, PermissionConstants.CUSTOMER_MANAGEMENT_POOL_READ}, logical = Logical.OR)
@@ -102,7 +106,15 @@ public class CustomerController {
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_ADD)
     @Operation(summary = "添加客户")
     public Customer add(@Validated @RequestBody CustomerAddRequest request) {
-        return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        String idempotentKey = "customer:add:" + OrganizationContext.getOrganizationId() + ":" + request.getName();
+        if (!idempotentService.checkAndSet(idempotentKey)) {
+            throw new GenericException("请勿重复提交");
+        }
+        try {
+            return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        } finally {
+            idempotentService.remove(idempotentKey);
+        }
     }
 
     @PostMapping("/update")
