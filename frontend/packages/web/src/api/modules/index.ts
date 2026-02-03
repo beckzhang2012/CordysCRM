@@ -373,6 +373,16 @@ export const {
   getAccountContractStatistic,
   getAccountPayment,
   getAccountPaymentStatistic,
+  addCustomerTag,
+  updateCustomerTag,
+  deleteCustomerTag,
+  getCustomerTagPage,
+  getCustomerTagList,
+  getCustomerTagsByCustomerId,
+  batchAddTagsToCustomer,
+  batchRemoveTagsFromCustomer,
+  setCustomerTags,
+  removeTagFromCustomer,
 } = customerApi;
 
 export const {

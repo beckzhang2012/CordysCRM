@@ -100,6 +100,17 @@
             and c.name like concat('%', #{request.keyword},'%')
         </if>
 
+        <if test="request.tagIds != null and request.tagIds.size() > 0">
+            and exists (
+                select 1 from customer_tag_relation tr
+                where tr.customer_id = c.id
+                and tr.tag_id in
+                <foreach collection="request.tagIds" item="tagId" open="(" close=")" separator=",">
+                    #{tagId}
+                </foreach>
+            )
+        </if>
+
         <include refid="filters">
             <property name="filters" value="request.filters"/>
         </include>

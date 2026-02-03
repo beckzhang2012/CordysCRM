@@ -65,4 +65,23 @@ export default {
     '3. The account after the merger, merged account contact, follow up plan, follow up records, business information, collaboration members later merge to the account',
   'customer.selectedMergeAccountTooltip':
     "Selected accounts: chosen from list; Other accounts: visible accounts; Owner assignment: only selected accounts' owners can be chosen; other accounts' owners remain unchanged",
+  // Customer Tags
+  'customer.tag.title': 'Customer Tags',
+  'customer.tag.add': 'Add Tag',
+  'customer.tag.empty': 'No tags',
+  'customer.tag.manageTitle': 'Manage Tags',
+  'customer.tag.searchPlaceholder': 'Search tags',
+  'customer.tag.createNew': 'Create New',
+  'customer.tag.inputName': 'Enter tag name',
+  'customer.tag.allTags': 'All Tags',
+  'customer.tag.selected': 'Selected Tags',
+  'customer.tag.nameRequired': 'Please enter tag name',
+  'customer.tag.createSuccess': 'Created successfully',
+  'customer.tag.deleteConfirm': 'Confirm Delete Tag',
+  'customer.tag.deleteContent': 'Are you sure to delete tag "{name}"? This will remove it from all customers.',
+  'customer.tag.deleteSuccess': 'Deleted successfully',
+  'customer.tag.removeConfirm': 'Confirm Remove Tag',
+  'customer.tag.removeContent': 'Are you sure to remove tag "{name}" from this customer?',
+  'customer.tag.removeSuccess': 'Removed successfully',
+  'customer.tag.saveSuccess': 'Saved successfully',
 };

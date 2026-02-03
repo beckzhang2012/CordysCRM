@@ -32,6 +32,11 @@
           :value-align="layout === 'vertical' ? 'start' : undefined"
           @init="handleDescriptionInit"
         />
+        <customerTagManage
+          :customer-id="props.sourceId"
+          :readonly="collaborationType === 'READ_ONLY' || props.readonly"
+          @update="handleTagUpdate"
+        />
       </div>
     </template>
     <template #right>
@@ -128,6 +133,7 @@
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
   import customerRelation from './customerRelation.vue';
+  import customerTagManage from './customerTagManage.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
 
@@ -343,6 +349,11 @@
   function handleDescriptionInit(_collaborationType?: CollaborationType, _sourceName?: string) {
     collaborationType.value = _collaborationType;
     sourceName.value = _sourceName || '';
+  }
+
+  function handleTagUpdate() {
+    refreshKey.value += 1;
+    emit('saved');
   }
 </script>
 

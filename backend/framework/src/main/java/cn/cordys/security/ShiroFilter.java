@@ -1,6 +1,7 @@
 package cn.cordys.security;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -107,6 +108,10 @@ public final class ShiroFilter {
      * @return 返回一个不可变Map，包含应绕过 CSRF 检查的 URL 路径的过滤器链定义。
      */
     public static Map<String, String> ignoreCsrfFilter() {
-        return Map.of("/", "apikey, authc", "/language", "apikey, authc", "/mock", "apikey, authc");
+        Map<String, String> map = new HashMap<>();
+        map.put("/", "apikey, authc");
+        map.put("/language", "apikey, authc");
+        map.put("/mock", "apikey, authc");
+        return map;
     }
 }
