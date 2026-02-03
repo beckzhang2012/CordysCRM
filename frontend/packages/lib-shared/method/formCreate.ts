@@ -137,7 +137,7 @@ export function parseModuleFieldValue(item: FormCreateField, fieldValue: string 
   } else if (item.type === FieldTypeEnum.INPUT_NUMBER) {
     value = formatNumberValue(fieldValue as string, item);
   } else if (item.type === FieldTypeEnum.DATE_TIME) {
-    value = formatTimeValue(fieldValue as string, item.dateType);
+    value = fieldValue ? formatTimeValue(fieldValue as string, item.dateType) : '-';
   }
   if (Array.isArray(value) && item.resourceFieldId) {
     value = value.join(',');
@@ -168,7 +168,8 @@ export function parseFormDetailValue(item: FormCreateField, form: FormDetail, so
       }
     }
     if (item.type === FieldTypeEnum.DATE_TIME) {
-      return formatTimeValue(name || form[item.businessKey], item.dateType);
+      const dateValue = name || form[item.businessKey];
+      return dateValue ? formatTimeValue(dateValue, item.dateType) : '-';
     }
     if (item.type === FieldTypeEnum.INPUT_NUMBER) {
       return formatNumberValue(name || form[item.businessKey], item);
