@@ -347,4 +347,7 @@ export default {
   'common.approvedSuccess': '审批通过',
   'common.unApprovedSuccess': '审批不通过',
   'common.skipped': '跳过',
+  'common.justNow': '刚刚',
+  'common.minutesAgo': '{n}分钟前',
+  'common.hoursAgo': '{n}小时前',
 };

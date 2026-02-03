@@ -337,4 +337,7 @@ export default {
   'common.approvedSuccess': 'Approval passed',
   'common.unApprovedSuccess': 'Approval not passed',
   'common.skipped': 'Skipped',
+  'common.justNow': 'Just now',
+  'common.minutesAgo': '{n} minutes ago',
+  'common.hoursAgo': '{n} hours ago',
 };

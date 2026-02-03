@@ -12,6 +12,14 @@
     @button-select="handleButtonSelect"
     @saved="handleSaved"
   >
+    <template #reminderPopContent>
+      <ReminderModal
+        v-model:show="showReminderModal"
+        :customer-id="props.sourceId"
+        :customer-name="sourceName"
+        @success="handleReminderSuccess"
+      />
+    </template>
     <template #transferPopContent>
       <TransferForm
         ref="transferFormRef"
@@ -124,6 +132,7 @@
   import CrmHeaderTable from '@/components/business/crm-header-table/index.vue';
   import CrmMoveModal from '@/components/business/crm-move-modal/index.vue';
   import CrmOverviewDrawer from '@/components/business/crm-overview-drawer/index.vue';
+  import ReminderModal from '@/components/business/crm-reminder-modal/index.vue';
   import type { TabContentItem } from '@/components/business/crm-tab-setting/type';
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
@@ -161,6 +170,8 @@
   const collaborationType = ref<CollaborationType>();
   const sourceName = ref('');
   const descriptionRef = ref<InstanceType<typeof CrmFormDescription>>();
+  const showReminderModal = ref(false);
+
   const buttonList = computed<ActionsItem[]>(() => {
     if (collaborationType.value || props.readonly) {
       return [];
@@ -173,6 +184,14 @@
         ghost: true,
         class: 'n-btn-outline-primary',
         permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
+      },
+      {
+        label: t('customer.reminder.setReminder'),
+        key: 'setReminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+        permission: ['CUSTOMER_MANAGEMENT:READ'],
       },
       {
         label: t('common.transfer'),
@@ -320,6 +339,11 @@
     showMoveModal.value = true;
   }
 
+  // 设置提醒成功回调
+  function handleReminderSuccess() {
+    // 可以在这里添加额外的逻辑，比如刷新提醒列表等
+  }
+
   function handleButtonSelect(key: string) {
     if (key === 'delete') {
       handleDelete();
@@ -327,6 +351,8 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      showReminderModal.value = true;
     }
   }
 
