@@ -47,7 +47,9 @@ import {
   ExportContactAllUrl,
   ExportContactSelectedUrl,
   ExportCustomerAllUrl,
+  ExportCustomerAllAsyncUrl,
   ExportCustomerSelectedUrl,
+  ExportCustomerSelectedAsyncUrl,
   ExportOpenSeaCustomerAllUrl,
   ExportOpenSeaCustomerSelectedUrl,
   FixedAccountPoolViewUrl,
@@ -554,6 +556,16 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.post({ url: ExportCustomerSelectedUrl, data });
   }
 
+  // 导出全量客户列表（异步队列）
+  function exportCustomerAllAsync(data: TableExportParams) {
+    return CDR.post<string>({ url: ExportCustomerAllAsyncUrl, data });
+  }
+
+  // 导出选中客户列表（异步队列）
+  function exportCustomerSelectedAsync(data: TableExportSelectedParams) {
+    return CDR.post<string>({ url: ExportCustomerSelectedAsyncUrl, data });
+  }
+
   // 导出全量联系人列表
   function exportContactAll(data: TableExportParams) {
     return CDR.post({ url: ExportContactAllUrl, data });
@@ -840,9 +852,11 @@ export default function useProductApi(CDR: CordysAxios) {
     getCustomerTab,
     updateCustomerFollowPlanStatus,
     exportCustomerAll,
+    exportCustomerAllAsync,
     exportContactAll,
     exportContactSelected,
     exportCustomerSelected,
+    exportCustomerSelectedAsync,
     moveCustomerToPool,
     addCustomerView,
     deleteCustomerView,
