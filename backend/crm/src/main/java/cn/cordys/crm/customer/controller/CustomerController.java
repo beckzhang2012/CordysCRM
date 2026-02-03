@@ -21,6 +21,7 @@ import cn.cordys.crm.customer.domain.Customer;
 import cn.cordys.crm.customer.dto.request.*;
 import cn.cordys.crm.customer.dto.response.CustomerGetResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
+import cn.cordys.crm.customer.service.CustomerExportQueueService;
 import cn.cordys.crm.customer.service.CustomerExportService;
 import cn.cordys.crm.customer.service.CustomerService;
 import cn.cordys.crm.opportunity.dto.response.OpportunityListResponse;
@@ -69,6 +70,8 @@ public class CustomerController {
     private DataScopeService dataScopeService;
     @Resource
     private CustomerExportService customerExportService;
+    @Resource
+    private CustomerExportQueueService customerExportQueueService;
     @Resource
     private ContractService contractService;
     @Resource
@@ -195,6 +198,25 @@ public class CustomerController {
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_EXPORT)
     public String opportunityExportSelect(@Validated @RequestBody ExportSelectRequest request) {
         return customerExportService.exportSelect(SessionUtils.getUserId(), request, OrganizationContext.getOrganizationId(), LocaleContextHolder.getLocale());
+    }
+
+    @PostMapping("/export-all-async")
+    @Operation(summary = "客户导出全部（异步队列）")
+    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_EXPORT)
+    public String exportAllAsync(@Validated @RequestBody CustomerExportRequest request) {
+        ConditionFilterUtils.parseCondition(request);
+        DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
+                OrganizationContext.getOrganizationId(), request.getViewId(), PermissionConstants.CUSTOMER_MANAGEMENT_READ);
+        return customerExportQueueService.submitExportTask(SessionUtils.getUserId(), request,
+                OrganizationContext.getOrganizationId(), deptDataPermission, LocaleContextHolder.getLocale());
+    }
+
+    @PostMapping("/export-select-async")
+    @Operation(summary = "导出选中客户（异步队列）")
+    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_EXPORT)
+    public String exportSelectAsync(@Validated @RequestBody ExportSelectRequest request) {
+        return customerExportQueueService.submitSelectExportTask(SessionUtils.getUserId(), request,
+                OrganizationContext.getOrganizationId(), LocaleContextHolder.getLocale());
     }
 
     @GetMapping("/template/download")
