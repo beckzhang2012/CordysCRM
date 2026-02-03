@@ -14,6 +14,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -89,12 +90,12 @@ public class SystemService {
         String edition = getEdition();
         CSHttpClient.DownloadInfo info = null;
         try {
-            info = CSHttpClient.sendGetRequest(Map.of(
-                    "currentVersion", currentBase,
-                    "majorVersion", "v1",
-                    "edition", edition,
-                    "product", PRODUCT
-            ));
+            Map<String, String> params = new HashMap<>();
+            params.put("currentVersion", currentBase);
+            params.put("majorVersion", "v1");
+            params.put("edition", edition);
+            params.put("product", PRODUCT);
+            info = CSHttpClient.sendGetRequest(params);
         } catch (Exception e) {
             LogUtils.info("检查版本信息失败: {}", e.getMessage());
         }
