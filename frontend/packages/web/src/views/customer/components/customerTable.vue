@@ -160,7 +160,13 @@
   import customerOverviewDrawer from './customerOverviewDrawer.vue';
   import mergeAccountModal from './mergeAccountModal.vue';
 
-  import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer } from '@/api/modules';
+  import {
+    batchDeleteCustomer,
+    batchTransferCustomer,
+    deleteCustomer,
+    updateCustomer,
+    getCustomerTagList,
+  } from '@/api/modules';
   import { baseFilterConfigList } from '@/config/clue';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import useFormCreateTable from '@/hooks/useFormCreateTable';
@@ -206,6 +212,26 @@
     customerId: '',
     id: '',
   });
+
+  // 标签列表
+  const tagOptions = ref<{ label: string; value: string }[]>([]);
+
+  // 加载标签列表
+  async function loadTagOptions() {
+    try {
+      const res = await getCustomerTagList();
+      tagOptions.value = (res || []).map((tag: any) => ({
+        label: tag.name,
+        value: tag.id,
+      }));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
+  // 初始化加载标签
+  loadTagOptions();
 
   function handleNewClick() {
     needInitDetail.value = false;
@@ -657,6 +683,15 @@
       title: t('customer.lastFollowUpDate'),
       dataIndex: 'followTime',
       type: FieldTypeEnum.TIME_RANGE_PICKER,
+    },
+    {
+      title: t('customer.tag.title'),
+      dataIndex: 'tagIds',
+      type: FieldTypeEnum.SELECT_MULTIPLE,
+      selectProps: {
+        options: tagOptions.value,
+        placeholder: t('customer.tag.searchPlaceholder'),
+      },
     },
     ...baseFilterConfigList,
   ]);

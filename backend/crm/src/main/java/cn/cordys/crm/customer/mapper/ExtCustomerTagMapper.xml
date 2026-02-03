@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <resultMap id="CustomerTagResponseMap" type="cn.cordys.crm.customer.dto.response.CustomerTagResponse">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="color" property="color"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectTagsByCustomerId" resultMap="CustomerTagResponseMap">
+        SELECT t.id, t.name, t.color, t.create_time
+        FROM customer_tag t
+        INNER JOIN customer_tag_relation tr ON t.id = tr.tag_id
+        WHERE tr.customer_id = #{customerId}
+        ORDER BY t.create_time DESC
+    </select>
+
+    <select id="selectTagsByOrganizationId" resultMap="CustomerTagResponseMap">
+        SELECT t.id, t.name, t.color, t.create_time
+        FROM customer_tag t
+        WHERE t.organization_id = #{organizationId}
+        <if test="name != null and name != ''">
+            AND t.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY t.create_time DESC
+    </select>
+
+    <select id="selectCustomerCountByTagId" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT customer_id)
+        FROM customer_tag_relation
+        WHERE tag_id = #{tagId}
+    </select>
+
+    <delete id="deleteRelations">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+        <if test="tagIds != null and tagIds.size() > 0">
+            AND tag_id IN
+            <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+                #{tagId}
+            </foreach>
+        </if>
+    </delete>
+
+    <delete id="deleteAllRelationsByCustomerId">
+        DELETE FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+    </delete>
+
+    <delete id="deleteRelationsByTagId">
+        DELETE FROM customer_tag_relation
+        WHERE tag_id = #{tagId}
+    </delete>
+
+</mapper>

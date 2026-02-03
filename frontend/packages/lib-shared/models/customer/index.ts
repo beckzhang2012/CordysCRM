@@ -18,6 +18,7 @@ export interface UpdateCustomerParams extends SaveCustomerParams {
 
 export interface CustomerTableParams extends TableQueryParams {
   viewId: CustomerSearchTypeEnum; // 搜索类型(ALL/SELF/DEPARTMENT/CUSTOMER_COLLABORATION)
+  tagIds?: string[]; // 标签ID列表
 }
 
 export interface CustomerListItem {
@@ -360,4 +361,38 @@ export interface MergeAccountParams {
   mergeIds: string[]; // 合并客户ids
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
+}
+
+// 客户标签
+export interface CustomerTagItem {
+  id: string;
+  name: string;
+  color?: string;
+  createTime: number;
+  customerCount?: number;
+}
+
+export interface AddCustomerTagParams {
+  name: string;
+  color?: string;
+}
+
+export interface UpdateCustomerTagParams {
+  id: string;
+  name: string;
+  color?: string;
+}
+
+export interface CustomerTagParams extends TableQueryParams {
+  name?: string;
+}
+
+export interface BatchAddTagsParams {
+  customerId: string;
+  tagIds: string[];
+}
+
+export interface SetCustomerTagsParams {
+  customerId: string;
+  tagIds: string[];
 }

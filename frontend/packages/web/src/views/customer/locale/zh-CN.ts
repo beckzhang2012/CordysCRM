@@ -60,4 +60,23 @@ export default {
     '3.客户合并后，被合并客户的联系人，跟进计划，跟进记录，商机信息，协作成员等会合并至主客户下',
   'customer.selectedMergeAccountTooltip':
     '已选客户：从列表中选定的客户；其他客户：数据可见负责的客户。负责人选择：已选客户：仅可选择已选客户的负责人；其他客户：负责人保持不变',
+  // 客户标签
+  'customer.tag.title': '客户标签',
+  'customer.tag.add': '添加标签',
+  'customer.tag.empty': '暂无标签',
+  'customer.tag.manageTitle': '管理标签',
+  'customer.tag.searchPlaceholder': '搜索标签',
+  'customer.tag.createNew': '新建标签',
+  'customer.tag.inputName': '请输入标签名称',
+  'customer.tag.allTags': '全部标签',
+  'customer.tag.selected': '已选标签',
+  'customer.tag.nameRequired': '请输入标签名称',
+  'customer.tag.createSuccess': '创建成功',
+  'customer.tag.deleteConfirm': '确认删除标签',
+  'customer.tag.deleteContent': '确定删除标签 "{name}" 吗？删除后，该标签将从所有客户中移除。',
+  'customer.tag.deleteSuccess': '删除成功',
+  'customer.tag.removeConfirm': '确认移除标签',
+  'customer.tag.removeContent': '确定从该客户移除标签 "{name}" 吗？',
+  'customer.tag.removeSuccess': '移除成功',
+  'customer.tag.saveSuccess': '保存成功',
 };
