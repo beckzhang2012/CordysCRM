@@ -39,14 +39,22 @@ public class DateTimeResolver extends AbstractModuleFieldResolver<DateTimeField>
 
     @Override
     public Object transformToValue(DateTimeField dateTimeField, String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        Object timestampObj = parse2Long(value);
+        if (timestampObj == null) {
+            return null;
+        }
+        Long timestamp = (Long) timestampObj;
         if (Strings.CI.equals(dateTimeField.getDateType(), DATE)) {
-            return TimeUtils.getDataStr(Long.valueOf(value));
+            return TimeUtils.getDataStr(timestamp);
         }
         if (Strings.CI.equals(dateTimeField.getDateType(), DATETIME)) {
-            return TimeUtils.getDataTimeStr(Long.valueOf(value));
+            return TimeUtils.getDataTimeStr(timestamp);
         }
         if (Strings.CI.equals(dateTimeField.getDateType(), MONTH)) {
-            return TimeUtils.getMonthStr(Long.valueOf(value));
+            return TimeUtils.getMonthStr(timestamp);
         }
         return value;
     }
