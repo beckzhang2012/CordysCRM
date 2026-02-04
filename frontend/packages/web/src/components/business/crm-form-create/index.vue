@@ -32,18 +32,37 @@
       </div>
     </n-scrollbar>
     <div class="crm-form-create-footer" :class="formConfig.optBtnPos">
-      <n-button v-if="props.isEdit" type="primary" @click="handleSave(false)">
+      <n-button
+        v-if="props.isEdit"
+        type="primary"
+        :disabled="isSubmitting"
+        :loading="isSubmitting"
+        @click="debouncedHandleSave(false)"
+      >
         {{ t('common.update') }}
       </n-button>
       <template v-else>
-        <n-button v-if="formConfig.optBtnContent[0].enable" type="primary" @click="handleSave(false)">
+        <n-button
+          v-if="formConfig.optBtnContent[0].enable"
+          type="primary"
+          :disabled="isSubmitting"
+          :loading="isSubmitting"
+          @click="debouncedHandleSave(false)"
+        >
           {{ formConfig.optBtnContent[0].text }}
         </n-button>
-        <n-button v-if="formConfig.optBtnContent[1].enable" type="primary" ghost @click="handleSave(true)">
+        <n-button
+          v-if="formConfig.optBtnContent[1].enable"
+          type="primary"
+          ghost
+          :disabled="isSubmitting"
+          :loading="isSubmitting"
+          @click="debouncedHandleSave(true)"
+        >
           {{ formConfig.optBtnContent[1].text }}
         </n-button>
       </template>
-      <n-button v-if="formConfig.optBtnContent[2].enable" secondary @click="emit('cancel')">
+      <n-button v-if="formConfig.optBtnContent[2].enable" secondary :disabled="isSubmitting" @click="emit('cancel')">
         {{ formConfig.optBtnContent[2].text }}
       </n-button>
     </div>
@@ -52,7 +71,7 @@
 
 <script setup lang="ts">
   import { FormInst, NButton, NForm, NScrollbar } from 'naive-ui';
-  import { cloneDeep, isEqual } from 'lodash-es';
+  import { cloneDeep, debounce, isEqual } from 'lodash-es';
 
   import { FieldTypeEnum, FormDesignKeyEnum, FormLinkScenarioEnum } from '@lib/shared/enums/formDesignEnum';
   import { useI18n } from '@lib/shared/hooks/useI18n';
@@ -91,6 +110,7 @@
   });
 
   const formRef = ref<FormInst>();
+  const isSubmitting = ref(false);
   const {
     needInitDetail,
     formKey,
@@ -280,21 +300,27 @@
   }
 
   function handleSave(isContinue = false) {
-    formRef.value?.validate((errors) => {
+    if (isSubmitting.value) return;
+    formRef.value?.validate(async (errors) => {
       if (!errors) {
-        const result = cloneDeep(formDetail.value);
-        fieldList.value.forEach((item) => {
-          if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
-            item.subFields.forEach((subField) => {
-              transformSubFieldsValue(subField, result[item.id]);
-            });
-          } else {
-            transformFieldValue(item, result, item.id);
-          }
-        });
-        saveForm(result, isContinue, (_isContinue, res) => {
-          emit('saved', isContinue, res);
-        });
+        isSubmitting.value = true;
+        try {
+          const result = cloneDeep(formDetail.value);
+          fieldList.value.forEach((item) => {
+            if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
+              item.subFields.forEach((subField) => {
+                transformSubFieldsValue(subField, result[item.id]);
+              });
+            } else {
+              transformFieldValue(item, result, item.id);
+            }
+          });
+          await saveForm(result, isContinue, (_isContinue, res) => {
+            emit('saved', isContinue, res);
+          });
+        } finally {
+          isSubmitting.value = false;
+        }
       } else {
         // 滚动到报错的位置
         const firstErrorId = errors[0]?.[0]?.field;
@@ -305,6 +331,8 @@
       }
     });
   }
+
+  const debouncedHandleSave = debounce(handleSave, 300, { leading: true, trailing: false });
 
   watch(
     () => loading.value,

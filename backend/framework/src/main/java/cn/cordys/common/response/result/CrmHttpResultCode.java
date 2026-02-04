@@ -57,7 +57,12 @@ public enum CrmHttpResultCode implements IResultCode {
     /**
      * 资源未找到
      */
-    NOT_FOUND(100404, "http_result_not_found");
+    NOT_FOUND(100404, "http_result_not_found"),
+
+    /**
+     * 重复请求
+     */
+    REPEAT_REQUEST(100429, "http_result_repeat_request");
 
     private final int code;
     private final String message;
