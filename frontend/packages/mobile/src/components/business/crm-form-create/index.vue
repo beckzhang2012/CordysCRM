@@ -32,6 +32,7 @@
           type="primary"
           class="!rounded-[var(--border-radius-small)] !text-[16px]"
           :loading="loading"
+          :disabled="isSubmitting"
           block
           @click="handleSave"
         >
@@ -74,6 +75,7 @@
     formDetail,
     originFormDetail,
     loading,
+    isSubmitting,
     formCreateTitle,
     initFormConfig,
     initFormDetail,

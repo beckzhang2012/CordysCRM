@@ -1,5 +1,5 @@
 import { showSuccessToast } from 'vant';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, debounce } from 'lodash-es';
 import dayjs from 'dayjs';
 
 import { FieldTypeEnum, FormDesignKeyEnum, type FormLinkScenarioEnum } from '@lib/shared/enums/formDesignEnum';
@@ -69,6 +69,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     optBtnPos: 'flex-row',
   }); // 表单属性配置
   const loading = ref(false);
+  const isSubmitting = ref(false);
   const unsaved = ref(false);
   const formDetail = ref<Record<string, any>>({});
   const originFormDetail = ref<Record<string, any>>({});
@@ -610,8 +611,12 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     }
   }
 
-  async function saveForm(form: Record<string, any>, callback?: () => void) {
+  async function saveFormImpl(form: Record<string, any>, callback?: () => void) {
+    if (isSubmitting.value) {
+      return;
+    }
     try {
+      isSubmitting.value = true;
       loading.value = true;
       const params: Record<string, any> = {
         ...props.otherSaveParams,
@@ -620,7 +625,6 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       };
       fieldList.value.forEach((item) => {
         if (item.businessKey) {
-          // 存在业务字段，则按照业务字段的key存储
           params[item.businessKey] = getNormalFieldValue(item, form[item.id]);
         } else {
           params.moduleFields.push({
@@ -649,8 +653,11 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       console.log(error);
     } finally {
       loading.value = false;
+      isSubmitting.value = false;
     }
   }
+
+  const saveForm = debounce(saveFormImpl, 300, { leading: true, trailing: false });
 
   const formCreateTitle = computed(() => {
     if (props.formKey === FormDesignKeyEnum.CLUE_TRANSITION_CUSTOMER) {
@@ -664,6 +671,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     descriptions,
     fieldList,
     loading,
+    isSubmitting,
     unsaved,
     formConfig,
     formDetail,
