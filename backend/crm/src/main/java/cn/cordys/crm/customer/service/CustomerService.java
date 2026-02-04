@@ -390,6 +390,8 @@ public class CustomerService {
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
     public Customer add(CustomerAddRequest request, String userId, String orgId) {
+        checkDuplicateCustomer(request.getName(), orgId);
+
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);
@@ -415,6 +417,19 @@ public class CustomerService {
                 NotificationConstants.Event.CUSTOMER_ADD, customer.getName(), userId,
                 orgId, List.of(customer.getOwner()), true);
         return customer;
+    }
+
+    private void checkDuplicateCustomer(String name, String orgId) {
+        if (StringUtils.isBlank(name)) {
+            return;
+        }
+        LambdaQueryWrapper<Customer> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Customer::getName, name)
+                .eq(Customer::getOrganizationId, orgId);
+        List<Customer> existingCustomers = customerMapper.selectListByLambda(queryWrapper);
+        if (CollectionUtils.isNotEmpty(existingCustomers)) {
+            throw new GenericException(Translator.get("customer.nameDuplicate", name));
+        }
     }
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.UPDATE, resourceId = "{#request.id}")
