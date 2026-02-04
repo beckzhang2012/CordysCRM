@@ -1225,7 +1225,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     isContinue: boolean,
     callback?: (_isContinue: boolean, res: any) => void,
     noReset = false
-  ) {
+  ): Promise<void> {
     try {
       loading.value = true;
       const params: Record<string, any> = {
@@ -1288,6 +1288,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.log(error);
+      throw error;
     } finally {
       loading.value = false;
     }

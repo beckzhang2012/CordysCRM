@@ -95,4 +95,14 @@ public interface ExtCustomerMapper {
     List<ChartResult> chart(@Param("request") CustomerChartAnalysisDbRequest request, @Param("userId") String userId, @Param("orgId") String orgId,
                             @Param("dataPermission") DeptDataPermissionDTO dataPermission);
 
+    /**
+     * 查询最近创建时间内的同名客户数量
+     *
+     * @param orgId 组织ID
+     * @param name 客户名称
+     * @param recentTime 最近时间戳
+     * @return 客户数量
+     */
+    int countRecentByName(@Param("orgId") String orgId, @Param("name") String name, @Param("recentTime") long recentTime);
+
 }

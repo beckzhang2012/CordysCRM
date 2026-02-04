@@ -1,5 +1,6 @@
 package cn.cordys.crm.customer.controller;
 
+import cn.cordys.common.annotation.Idempotent;
 import cn.cordys.common.constants.FormKey;
 import cn.cordys.common.constants.InternalUserView;
 import cn.cordys.common.constants.PermissionConstants;
@@ -101,6 +102,7 @@ public class CustomerController {
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_ADD)
     @Operation(summary = "添加客户")
+    @Idempotent(prefix = "customer:add", keyExpression = "#request.name", expireTime = 5, message = "客户创建请求正在处理中，请勿重复提交")
     public Customer add(@Validated @RequestBody CustomerAddRequest request) {
         return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }

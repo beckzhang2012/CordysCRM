@@ -735,4 +735,11 @@
             #{id}
         </foreach>
     </select>
+
+    <select id="countRecentByName" resultType="java.lang.Integer">
+        select count(id) from customer
+        where organization_id = #{orgId}
+        and name = #{name}
+        and create_time &gt;= #{recentTime}
+    </select>
 </mapper>

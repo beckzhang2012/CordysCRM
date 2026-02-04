@@ -388,8 +388,31 @@ public class CustomerService {
         return customerGetResponse;
     }
 
+    /**
+     * 检查客户名称是否重复
+     * 在短时间窗口内（如5秒内），如果同一组织下已存在相同名称的客户，则认为是重复提交
+     *
+     * @param name 客户名称
+     * @param orgId 组织ID
+     */
+    private void checkDuplicateCustomerName(String name, String orgId) {
+        if (StringUtils.isBlank(name)) {
+            return;
+        }
+        // 查询同一组织下是否存在相同名称的客户（在最近5秒内创建）
+        long recentTime = System.currentTimeMillis() - 5000;
+        int count = extCustomerMapper.countRecentByName(orgId, name.trim(), recentTime);
+        if (count > 0) {
+            throw new GenericException(CustomerResultCode.CUSTOMER_EXIST.getCode(),
+                    Translator.get("customer.exist.recently", "该客户名称在短时间内已创建，请勿重复提交"));
+        }
+    }
+
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
     public Customer add(CustomerAddRequest request, String userId, String orgId) {
+        // 检查重复客户名称
+        checkDuplicateCustomerName(request.getName(), orgId);
+
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);
