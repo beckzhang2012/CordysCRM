@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.reminder.mapper.ExtReminderMapper">
+
+    <select id="selectById" resultType="cn.cordys.crm.reminder.domain.Reminder">
+        select id, source_id, source_name, remind_time, remind_content,
+               is_read, created_at, updated_at
+        from reminder
+        where id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="cn.cordys.crm.reminder.domain.Reminder">
+        select id, source_id, source_name, remind_time, remind_content,
+               is_read, created_at, updated_at
+        from reminder
+        order by remind_time desc
+    </select>
+
+    <select id="selectUnread" resultType="cn.cordys.crm.reminder.domain.Reminder">
+        select id, source_id, source_name, remind_time, remind_content,
+               is_read, created_at, updated_at
+        from reminder
+        where is_read = false
+        order by remind_time desc
+    </select>
+
+    <select id="selectUpcoming" resultType="cn.cordys.crm.reminder.domain.Reminder">
+        select id, source_id, source_name, remind_time, remind_content,
+               is_read, created_at, updated_at
+        from reminder
+        where remind_time &gt;= #{currentTime}
+        and is_read = false
+        order by remind_time asc
+    </select>
+
+    <insert id="insert" parameterType="cn.cordys.crm.reminder.domain.Reminder">
+        insert into reminder (id, source_id, source_name, remind_time, 
+                              remind_content, is_read, created_at, updated_at)
+        values (#{reminder.id}, #{reminder.sourceId}, #{reminder.sourceName}, 
+                #{reminder.remindTime}, #{reminder.remindContent}, #{reminder.isRead},
+                #{reminder.createdAt}, #{reminder.updatedAt})
+    </insert>
+
+    <update id="update" parameterType="cn.cordys.crm.reminder.domain.Reminder">
+        update reminder
+        set source_id = #{reminder.sourceId},
+            source_name = #{reminder.sourceName},
+            remind_time = #{reminder.remindTime},
+            remind_content = #{reminder.remindContent},
+            is_read = #{reminder.isRead},
+            updated_at = #{reminder.updatedAt}
+        where id = #{reminder.id}
+    </update>
+
+    <update id="markAsRead">
+        update reminder
+        set is_read = true,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="batchMarkAsRead">
+        update reminder
+        set is_read = true,
+            updated_at = now()
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteById">
+        delete from reminder
+        where id = #{id}
+    </delete>
+
+    <delete id="batchDeleteByIds">
+        delete from reminder
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="countUnread" resultType="int">
+        select count(*) from reminder
+        where is_read = false
+    </select>
+
+</mapper>

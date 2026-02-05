@@ -5,6 +5,11 @@
     "types/**/*",
     "*.d.ts",
   ],
+  "exclude": [
+    "node_modules",
+    ".git",
+    "dist",
+  ],
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {

@@ -105,6 +105,12 @@
         type="warning"
         @refresh="refresh"
       />
+      <ReminderModal
+        v-model:show="showReminderModal"
+        :source-id="props.sourceId"
+        :source-name="sourceName"
+        @saved="handleReminderSaved"
+      />
     </template>
   </CrmOverviewDrawer>
 </template>
@@ -130,6 +136,7 @@
   import customerRelation from './customerRelation.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
+  import ReminderModal from '@/components/business/reminder-modal/index.vue';
 
   import { deleteCustomer, getCustomerHeaderList, updateCustomer } from '@/api/modules';
   import useModal from '@/hooks/useModal';
@@ -190,13 +197,21 @@
         popSlotContent: 'transferPopContent',
       },
       {
-        label: t('customer.moveToOpenSea'),
-        key: 'moveToOpenSea',
-        text: false,
-        ghost: true,
-        class: 'n-btn-outline-primary',
-        permission: ['CUSTOMER_MANAGEMENT:RECYCLE'],
-      },
+          label: t('customer.moveToOpenSea'),
+          key: 'moveToOpenSea',
+          text: false,
+          ghost: true,
+          class: 'n-btn-outline-primary',
+          permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
+        },
+        {
+          label: t('customer.setReminder'),
+          key: 'setReminder',
+          text: false,
+          ghost: true,
+          class: 'n-btn-outline-primary',
+          permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
+        },
       {
         label: t('common.delete'),
         key: 'delete',
@@ -205,6 +220,14 @@
         danger: true,
         class: 'n-btn-outline-primary',
         permission: ['CUSTOMER_MANAGEMENT:DELETE'],
+      },
+      {
+        label: t('common.setReminder'),
+        key: 'setReminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+        permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
       },
     ];
   });
@@ -327,12 +350,19 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      handleSetReminder();
     }
   }
 
   function handleSaved() {
     refreshKey.value += 1;
     emit('saved');
+  }
+
+  const showReminderModal = ref(false);
+  function handleSetReminder() {
+    showReminderModal.value = true;
   }
 
   function refresh() {
@@ -343,6 +373,10 @@
   function handleDescriptionInit(_collaborationType?: CollaborationType, _sourceName?: string) {
     collaborationType.value = _collaborationType;
     sourceName.value = _sourceName || '';
+  }
+
+  function handleReminderSaved() {
+    showReminderModal.value = false;
   }
 </script>
 

@@ -8,6 +8,7 @@ export default {
   'customer.batchDeleteTitleTip': 'Are you sure to delete {number} accounts?',
   'customer.batchDeleteContentTip': 'After deletion, members cannot find this account, please operate with caution!',
   'customer.moveToOpenSea': 'Move to Open Sea',
+  'customer.setReminder': 'Set Reminder',
   'customer.moveToSeaOrPool': 'Move to Sea/Pool',
   'customer.batchMoveTitleTip': 'Confirm to move {number} accounts to high seas?',
   'customer.moveCustomerToOpenSeaTitleTip': 'Confirm moving {name} account to open pool?',

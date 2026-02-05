@@ -6,7 +6,9 @@
   >
     <n-message-provider>
       <n-dialog-provider>
-        <RouterView />
+        <n-notification-provider>
+          <RouterView />
+        </n-notification-provider>
       </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
@@ -14,7 +16,7 @@
 
 <script setup lang="ts">
   import { useRouter } from 'vue-router';
-  import { dateEnUS, dateZhCN, enUS, NConfigProvider, NDialogProvider, NMessageProvider, zhCN } from 'naive-ui';
+  import { dateEnUS, dateZhCN, enUS, NConfigProvider, NDialogProvider, NMessageProvider, NNotificationProvider, zhCN } from 'naive-ui';
 
   import { CompanyTypeEnum } from '@lib/shared/enums/commonEnum';
   import useLocale from '@lib/shared/locale/useLocale';
