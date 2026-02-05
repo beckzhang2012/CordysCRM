@@ -735,4 +735,23 @@
             #{id}
         </foreach>
     </select>
+
+    <select id="selectByPhoneOrEmail" resultType="cn.cordys.crm.customer.domain.Customer">
+        select distinct c.*
+        from customer c
+        left join customer_field cf1 on c.id = cf1.resource_id and cf1.field_id in ('phone', 'mobile')
+        left join customer_field cf2 on c.id = cf2.resource_id and cf2.field_id = 'email'
+        where c.organization_id = #{orgId}
+        and (
+            <if test="phone != null and phone != ''">
+                cf1.field_value = #{phone}
+            </if>
+            <if test="phone != null and phone != '' and email != null and email != ''">
+                or
+            </if>
+            <if test="email != null and email != ''">
+                cf2.field_value = #{email}
+            </if>
+        )
+    </select>
 </mapper>

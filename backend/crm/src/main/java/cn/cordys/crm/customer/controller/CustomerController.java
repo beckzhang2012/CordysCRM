@@ -48,6 +48,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
 import java.util.List;
 
 /**
@@ -58,6 +62,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/account")
 public class CustomerController {
+
+    private static final Map<String, Boolean> REQUEST_ID_CACHE = new ConcurrentHashMap<>();
 
     @Resource
     private CustomerService customerService;
@@ -102,6 +108,12 @@ public class CustomerController {
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_ADD)
     @Operation(summary = "添加客户")
     public Customer add(@Validated @RequestBody CustomerAddRequest request) {
+        if (request.getRequestId() != null && !request.getRequestId().isEmpty()) {
+            if (REQUEST_ID_CACHE.containsKey(request.getRequestId())) {
+                throw new RuntimeException("请勿重复提交");
+            }
+            REQUEST_ID_CACHE.put(request.getRequestId(), true);
+        }
         return customerService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 

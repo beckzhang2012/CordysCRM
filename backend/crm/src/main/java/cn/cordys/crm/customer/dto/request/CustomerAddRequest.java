@@ -16,6 +16,10 @@ import java.util.List;
 @Data
 public class CustomerAddRequest {
 
+    @Size(max = 64)
+    @Schema(description = "请求ID，用于幂等性校验")
+    private String requestId;
+
     @NotBlank
     @Size(max = 255)
     @Schema(description = "客户名称")
