@@ -7,6 +7,7 @@ import cn.cordys.common.dto.DeptDataPermissionDTO;
 import cn.cordys.common.dto.ExportHeadDTO;
 import cn.cordys.common.dto.ExportSelectRequest;
 import cn.cordys.common.service.BaseExportService;
+import cn.cordys.common.service.ExportExecutorResolver;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.LogUtils;
 import cn.cordys.common.util.SubListUtils;
@@ -25,6 +26,8 @@ import cn.idev.excel.support.ExcelTypeEnum;
 import cn.idev.excel.write.metadata.WriteSheet;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.BeanUtils;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,8 +38,21 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(rollbackFor = Exception.class)
-public class CustomerExportService extends BaseExportService {
+    @Transactional(rollbackFor = Exception.class)
+    public class CustomerExportService extends BaseExportService {
+
+        @PostConstruct
+        public void init() {
+            exportExecutorResolver.register(ExportConstants.ExportType.CUSTOMER.toString(), task -> {
+                try {
+                    ExportTask crmTask = new ExportTask();
+                    BeanUtils.copyProperties(task, crmTask);
+                    exportCustomerData(crmTask, task.getCreateUser(), new CustomerExportRequest(), task.getOrganizationId(), null, null);
+                } catch (Exception e) {
+                    LogUtils.error("客户导出失败", e);
+                }
+            });
+        }
 
     @Resource
     private CustomerService customerService;
@@ -44,6 +60,8 @@ public class CustomerExportService extends BaseExportService {
     private ExportTaskService exportTaskService;
     @Resource
     private ExtCustomerMapper extCustomerMapper;
+    @Resource
+    private ExportExecutorResolver exportExecutorResolver;
 
 
     public String export(String userId, CustomerExportRequest request, String orgId, DeptDataPermissionDTO deptDataPermission, Locale locale) {

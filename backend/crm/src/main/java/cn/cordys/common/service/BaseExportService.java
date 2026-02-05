@@ -58,6 +58,8 @@ public abstract class BaseExportService {
     private LogService logService;
     @Resource
     private ExportTaskService exportTaskService;
+    @Resource
+    private ExportMessagePublisher exportMessagePublisher;
 
 
     public Map<String, BaseField> getFieldConfigMap(String formKey, String orgId) {
@@ -93,6 +95,7 @@ public abstract class BaseExportService {
                     break;
                 }
                 writer.write(data, sheet);
+                
                 if (data.size() < EXPORT_MAX_COUNT) {
                     break;
                 }
@@ -230,9 +233,9 @@ public abstract class BaseExportService {
         List<List<String>> exportHeads = getExportMergeHeadList(exportParam.getHeadList(), exportParam.getOrgId(), exportParam.getFormKey());
         List<Integer> mergeColumns = getMergeColumns(exportHeads);
         exportParam.setMergeHeads(getMergeHeads(exportParam.getHeadList(), exportParam.getFormKey(), exportParam.getOrgId()));
-        return exportWithMergeStrategy(exportParam, (task) -> batchHandleDataWithMergeStrategy(exportHeads, task, exportParam.getFileName(),
+        return exportWithMergeStrategy(exportParam, () -> batchHandleDataWithMergeStrategy(exportHeads, null, exportParam.getFileName(),
                 mergeColumns, exportParam.getPageRequest(),
-                t -> getExportMergeData(task.getId(), exportParam)));
+                t -> getExportMergeData(null, exportParam)));
     }
 
     /**
@@ -246,8 +249,8 @@ public abstract class BaseExportService {
         List<List<String>> exportHeads = getExportMergeHeadList(exportParam.getHeadList(), exportParam.getOrgId(), exportParam.getFormKey());
         List<Integer> mergeColumns = getMergeColumns(exportHeads);
         exportParam.setMergeHeads(getMergeHeads(exportParam.getHeadList(), exportParam.getFormKey(), exportParam.getOrgId()));
-        return exportWithMergeStrategy(exportParam, (task) -> {
-            File file = prepareExportFile(task.getFileId(), exportParam.getFileName(), task.getOrganizationId());
+        return exportWithMergeStrategy(exportParam, () -> {
+            File file = prepareExportFile(null, exportParam.getFileName(), exportParam.getOrgId());
             try (ExcelWriter writer = EasyExcel.write(file).head(exportHeads).excelType(ExcelTypeEnum.XLSX)
                     .registerWriteHandler(new CustomHeadColWidthStyleStrategy()).build()) {
                 WriteSheet sheet = EasyExcel.writerSheet("导出数据").build();
@@ -255,10 +258,9 @@ public abstract class BaseExportService {
                 SubListUtils.dealForSubList(exportParam.getSelectIds(), SubListUtils.DEFAULT_EXPORT_BATCH_SIZE, (ids) -> {
                     MergeResult mergeResult = new MergeResult();
                     try {
-                        mergeResult = getExportMergeData(task.getId(), exportParam);
+                        mergeResult = getExportMergeData(null, exportParam);
                     } catch (InterruptedException e) {
                         LogUtils.error("任务停止中断", e);
-                        exportTaskService.update(task.getId(), ExportConstants.ExportStatus.STOP.toString(), exportParam.getUserId());
                     }
                     // 写入数据
                     writer.write(mergeResult.getDataList(), sheet);
@@ -280,10 +282,16 @@ public abstract class BaseExportService {
      *
      * @return 导出任务ID
      */
-    private String exportWithMergeStrategy(ExportDTO exportParam, ExportExecutor executor) {
+    private String exportWithMergeStrategy(ExportDTO exportParam, ExportTaskFunction executor) {
         exportParam.setExportFieldParam(getExportFieldParam(exportParam));
         return asyncExport(exportParam.getFileName(), exportParam.getOrgId(), exportParam.getUserId(), exportParam.getLocale(),
-                exportParam.getLogModule(), exportParam.getExportType(), executor);
+                exportParam.getLogModule(), exportParam.getExportType(), task -> {
+                    try {
+                        executor.apply();
+                    } catch (Exception e) {
+                        LogUtils.error("导出失败", e);
+                    }
+                });
     }
 
     /**
@@ -493,8 +501,8 @@ public abstract class BaseExportService {
         String fileId = IDGenerator.nextStr();
         ExportTask exportTask = exportTaskService.saveTask(currentOrg, fileId, currentUser, exportType, exportFileName);
 
-        runExport(currentOrg, currentUser, logModule, locale, exportTask, exportFileName,
-                () -> executor.execute(exportTask));
+        // 使用Redis消息队列异步处理导出任务
+        exportMessagePublisher.publish(exportTask);
 
         return exportTask.getId();
     }
@@ -555,36 +563,7 @@ public abstract class BaseExportService {
     }
 
     public void runExport(String orgId, String userId, String module, Locale locale, ExportTask exportTask, String fileName, ExportTaskFunction func) {
-        Thread.startVirtualThread(() -> {
-            try {
-                LocaleContextHolder.setLocale(locale);
-                ExportThreadRegistry.register(exportTask.getId(), Thread.currentThread());
-
-                func.apply();
-
-                exportTaskService.update(
-                        exportTask.getId(),
-                        ExportConstants.ExportStatus.SUCCESS.name(),
-                        userId
-                );
-            } catch (InterruptedException e) {
-                LogUtils.error("任务停止中断", e);
-                exportTaskService.update(
-                        exportTask.getId(),
-                        ExportConstants.ExportStatus.STOP.name(),
-                        userId
-                );
-            } catch (Exception e) {
-                LogUtils.error("导出任务异常", e);
-                exportTaskService.update(
-                        exportTask.getId(),
-                        ExportConstants.ExportStatus.ERROR.name(),
-                        userId
-                );
-            } finally {
-                ExportThreadRegistry.remove(exportTask.getId());
-                exportLog(orgId, exportTask.getId(), userId, LogType.EXPORT, module, fileName);
-            }
-        });
+        // 使用线程池异步执行导出任务
+        exportMessagePublisher.publish(exportTask);
     }
 }

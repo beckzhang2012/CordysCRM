@@ -1,6 +1,6 @@
 package cn.cordys.common.service;
 
-import cn.cordys.crm.system.domain.ExportTask;
+import cn.cordys.common.domain.ExportTask;
 
 /**
  * 通用导出执行器
