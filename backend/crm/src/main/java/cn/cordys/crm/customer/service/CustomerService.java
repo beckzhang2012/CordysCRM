@@ -45,6 +45,9 @@ import cn.cordys.crm.follow.service.FollowUpRecordService;
 import cn.cordys.crm.opportunity.domain.Opportunity;
 import cn.cordys.crm.opportunity.mapper.ExtOpportunityMapper;
 import cn.cordys.crm.system.constants.DictModule;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import java.util.concurrent.TimeUnit;
 import cn.cordys.crm.system.constants.NotificationConstants;
 import cn.cordys.crm.system.constants.SheetKey;
 import cn.cordys.crm.system.domain.Dict;
@@ -153,6 +156,8 @@ public class CustomerService {
     private BaseMapper<CustomerCollaboration> customerCollaborationMapper;
     @Resource
     private BaseMapper<CustomerContact> customerContactMapper;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     public PagerWithOption<List<CustomerListResponse>> list(CustomerPageRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -389,7 +394,32 @@ public class CustomerService {
     }
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
-    public Customer add(CustomerAddRequest request, String userId, String orgId) {
+    public Customer add(CustomerAddRequest request, String userId, String orgId, String idempotencyKey) {
+        // 幂等性校验
+        if (StringUtils.isNotBlank(idempotencyKey)) {
+            String redisKey = "customer:idempotency:" + idempotencyKey;
+            ValueOperations<String, Object> ops = redisTemplate.opsForValue();
+            Boolean exists = ops.setIfAbsent(redisKey, "processed", 24, TimeUnit.HOURS);
+            if (Boolean.FALSE.equals(exists)) {
+                // 重复请求，返回已存在的客户（或抛出异常）
+                throw new GenericException(Translator.get("customer.duplicate.submit"));
+            }
+        }
+        
+        // 重复数据检查（根据客户名称和手机号）
+        if (StringUtils.isNotBlank(request.getName())) {
+            LambdaQueryWrapper<Customer> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Customer::getName, request.getName())
+                   .eq(Customer::getOrganizationId, orgId);
+            if (StringUtils.isNotBlank(request.getMobile())) {
+                wrapper.eq(Customer::getMobile, request.getMobile());
+            }
+            Long count = customerMapper.selectCountByLambda(wrapper);
+            if (count != null && count > 0) {
+                throw new GenericException(Translator.get("customer.already.exists"));
+            }
+        }
+        
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);
