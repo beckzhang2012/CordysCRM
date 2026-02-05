@@ -79,6 +79,36 @@ const customer: AppRouteRecordRaw = {
         permissions: ['CUSTOMER_MANAGEMENT:UPDATE'],
       },
     },
+    {
+      path: 'tag/index',
+      name: CustomerRouteEnum.CUSTOMER_TAG_INDEX,
+      component: () => import('@/views/customer/tag/index.vue'),
+      meta: {
+        depth: 2,
+        locale: '标签管理',
+        permissions: ['CUSTOMER_MANAGEMENT:READ'],
+      },
+    },
+    {
+      path: 'tag/add',
+      name: CustomerRouteEnum.CUSTOMER_TAG_ADD,
+      component: () => import('@/views/customer/tag/form.vue'),
+      meta: {
+        depth: 3,
+        locale: '新建标签',
+        permissions: ['CUSTOMER_MANAGEMENT:ADD'],
+      },
+    },
+    {
+      path: 'tag/edit',
+      name: CustomerRouteEnum.CUSTOMER_TAG_EDIT,
+      component: () => import('@/views/customer/tag/form.vue'),
+      meta: {
+        depth: 3,
+        locale: '编辑标签',
+        permissions: ['CUSTOMER_MANAGEMENT:UPDATE'],
+      },
+    },
   ],
 };
 

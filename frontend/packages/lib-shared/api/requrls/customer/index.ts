@@ -129,3 +129,13 @@ export const FixedAccountPoolViewUrl = 'pool/account/view/fixed';
 export const EnableAccountPoolViewUrl = 'pool/account/view/enable';
 export const DragAccountPoolViewUrl = 'pool/account/view/edit/pos';
 export const generateCustomerPoolChartUrl = '/pool/account/chart';
+
+// 标签管理
+export const AddCustomerTagUrl = '/account/tag/add'; // 添加标签
+export const UpdateCustomerTagUrl = '/account/tag/update'; // 更新标签
+export const DeleteCustomerTagUrl = '/account/tag/delete'; // 删除标签
+export const GetCustomerTagUrl = '/account/tag/get'; // 获取标签详情
+export const GetCustomerTagListUrl = '/account/tag/list'; // 获取标签列表
+export const AddCustomerTagsUrl = '/account/tag/customer/add'; // 为客户添加标签
+export const RemoveCustomerTagsUrl = '/account/tag/customer/remove'; // 为客户移除标签
+export const GetCustomerTagsUrl = '/account/tag/customer/list'; // 获取客户的标签列表

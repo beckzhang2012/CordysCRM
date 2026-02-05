@@ -22,6 +22,9 @@ export enum CustomerRouteEnum {
   CUSTOMER_OPENSEA_DETAIL = 'accountOpenSeaDetail',
   CUSTOMER_RELATION = 'accountRelation',
   CUSTOMER_COLLABORATOR = 'accountCollaborator',
+  CUSTOMER_TAG_INDEX = 'customerTagIndex',
+  CUSTOMER_TAG_ADD = 'customerTagAdd',
+  CUSTOMER_TAG_EDIT = 'customerTagEdit',
 }
 
 export enum CommonRouteEnum {
