@@ -1,12 +1,13 @@
 package cn.cordys.crm.customer.service;
 
-import cn.cordys.aspectj.constants.LogModule;
 import cn.cordys.common.dto.DeptDataPermissionDTO;
 import cn.cordys.common.dto.ExportSelectRequest;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.crm.customer.dto.request.CustomerExportRequest;
 import cn.cordys.crm.system.constants.ExportConstants;
 import cn.cordys.crm.system.domain.ExportTask;
+import cn.cordys.crm.system.dto.ExportTaskMessage;
+import cn.cordys.crm.system.producer.ExportTaskProducer;
 import cn.cordys.crm.system.service.ExportTaskService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,9 @@ import java.util.Locale;
 public class CustomerPoolExportService extends CustomerExportService {
 
     @Resource
-    private CustomerExportService customerExportService;
-    @Resource
     private ExportTaskService exportTaskService;
+    @Resource
+    private ExportTaskProducer exportTaskProducer;
 
 
     /**
@@ -42,8 +43,20 @@ public class CustomerPoolExportService extends CustomerExportService {
         String fileId = IDGenerator.nextStr();
         ExportTask exportTask = exportTaskService.saveTask(orgId, fileId, userId, ExportConstants.ExportType.CUSTOMER_POOL.toString(), request.getFileName());
 
-        runExport(orgId, userId, LogModule.CUSTOMER_POOL, locale, exportTask, request.getFileName(),
-                () -> customerExportService.exportCustomerData(exportTask, userId, request, orgId, deptDataPermission, locale));
+        // 构建导出任务消息并发送到队列
+        ExportTaskMessage message = ExportTaskMessage.builder()
+                .taskId(exportTask.getId())
+                .fileId(fileId)
+                .userId(userId)
+                .orgId(orgId)
+                .fileName(request.getFileName())
+                .exportType(ExportConstants.ExportType.CUSTOMER_POOL.toString())
+                .customerExportRequest(request)
+                .deptDataPermission(deptDataPermission)
+                .locale(locale.toString())
+                .build();
+
+        exportTaskProducer.sendExportTask(message);
 
         return exportTask.getId();
     }
@@ -55,8 +68,19 @@ public class CustomerPoolExportService extends CustomerExportService {
         String fileId = IDGenerator.nextStr();
         ExportTask exportTask = exportTaskService.saveTask(orgId, fileId, userId, ExportConstants.ExportType.CUSTOMER_POOL.toString(), request.getFileName());
 
-        runExport(orgId, userId, LogModule.CUSTOMER_POOL, locale, exportTask, request.getFileName(),
-                () -> exportSelectData(exportTask, userId, request, orgId, locale));
+        // 构建导出任务消息并发送到队列
+        ExportTaskMessage message = ExportTaskMessage.builder()
+                .taskId(exportTask.getId())
+                .fileId(fileId)
+                .userId(userId)
+                .orgId(orgId)
+                .fileName(request.getFileName())
+                .exportType(ExportConstants.ExportType.CUSTOMER_POOL.toString())
+                .exportSelectRequest(request)
+                .locale(locale.toString())
+                .build();
+
+        exportTaskProducer.sendExportTask(message);
 
         return exportTask.getId();
     }
