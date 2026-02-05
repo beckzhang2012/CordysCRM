@@ -168,7 +168,7 @@ export function parseFormDetailValue(item: FormCreateField, form: FormDetail, so
       }
     }
     if (item.type === FieldTypeEnum.DATE_TIME) {
-      return formatTimeValue(name || form[item.businessKey], item.dateType);
+      return formatTimeValue(form[item.businessKey], item.dateType);
     }
     if (item.type === FieldTypeEnum.INPUT_NUMBER) {
       return formatNumberValue(name || form[item.businessKey], item);

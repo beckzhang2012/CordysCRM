@@ -168,7 +168,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
           if (item.type === FieldTypeEnum.DATE_TIME) {
             descriptions.value.push({
               label: item.name,
-              value: formatTimeValue(name || form[item.businessKey], item.dateType),
+              value: formatTimeValue(form[item.businessKey], item.dateType),
             });
           } else if (item.type === FieldTypeEnum.INPUT_NUMBER) {
             descriptions.value.push({
@@ -520,12 +520,17 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
                 formDetail.value[field.id] = linkField.value.join(',').slice(0, 255);
               } else if (linkField.type === FieldTypeEnum.DATE_TIME) {
                 // 联动的字段是日期时间则转换
-                if (linkField.dateType === 'month') {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM');
-                } else if (linkField.dateType === 'date') {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM-DD');
+                if (linkField.value == null || linkField.value === '' || Number.isNaN(Number(linkField.value))) {
+                  formDetail.value[field.id] = '-';
                 } else {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM-DD HH:mm:ss');
+                  const date = dayjs(Number(linkField.value));
+                  if (linkField.dateType === 'month') {
+                    formDetail.value[field.id] = date.isValid() ? date.format('YYYY-MM') : '-';
+                  } else if (linkField.dateType === 'date') {
+                    formDetail.value[field.id] = date.isValid() ? date.format('YYYY-MM-DD') : '-';
+                  } else {
+                    formDetail.value[field.id] = date.isValid() ? date.format('YYYY-MM-DD HH:mm:ss') : '-';
+                  }
                 }
               } else if (linkField.type === FieldTypeEnum.LOCATION) {
                 // 联动的字段是省市区则填充城市路径
