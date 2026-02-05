@@ -75,11 +75,13 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -153,6 +155,8 @@ public class CustomerService {
     private BaseMapper<CustomerCollaboration> customerCollaborationMapper;
     @Resource
     private BaseMapper<CustomerContact> customerContactMapper;
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
 
     public PagerWithOption<List<CustomerListResponse>> list(CustomerPageRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -390,6 +394,22 @@ public class CustomerService {
 
     @OperationLog(module = LogModule.CUSTOMER_INDEX, type = LogType.ADD, resourceName = "{#request.name}")
     public Customer add(CustomerAddRequest request, String userId, String orgId) {
+        String idempotentKey = "customer:add:" + userId + ":" + orgId + ":" + request.getName();
+        Boolean isSet = redisTemplate.opsForValue().setIfAbsent(idempotentKey, "1", 5, TimeUnit.SECONDS);
+        if (Boolean.FALSE.equals(isSet)) {
+            throw new GenericException(CustomerResultCode.OPERATION_TOO_FREQUENT);
+        }
+
+        LambdaQueryWrapper<Customer> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Customer::getName, request.getName());
+        queryWrapper.eq(Customer::getOrganizationId, orgId);
+        queryWrapper.eq(Customer::getInSharedPool, false);
+        Customer existingCustomer = customerMapper.selectOne(queryWrapper);
+        if (existingCustomer != null) {
+            redisTemplate.delete(idempotentKey);
+            throw new GenericException(CustomerResultCode.CUSTOMER_ALREADY_EXISTS);
+        }
+
         Customer customer = BeanUtils.copyBean(new Customer(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             customer.setOwner(userId);
