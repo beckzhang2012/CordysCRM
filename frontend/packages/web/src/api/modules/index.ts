@@ -373,6 +373,13 @@ export const {
   getAccountContractStatistic,
   getAccountPayment,
   getAccountPaymentStatistic,
+  addCustomerReminder,
+  updateCustomerReminder,
+  deleteCustomerReminder,
+  getCustomerReminderList,
+  getCustomerReminderPending,
+  getCustomerReminderDetail,
+  getCustomerReminderCount,
 } = customerApi;
 
 export const {
