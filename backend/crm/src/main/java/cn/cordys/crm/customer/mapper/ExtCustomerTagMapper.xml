@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <select id="list" resultType="cn.cordys.crm.customer.dto.response.CustomerTagResponse">
+        select ct.id, ct.name, ct.color, ct.create_user, ct.create_time,
+               (select count(*) from customer_tag_relation ctr where ctr.tag_id = ct.id and ctr.organization_id = #{orgId}) as customer_count
+        from customer_tag ct
+        where ct.organization_id = #{orgId}
+        <if test="keyword != null and keyword != ''">
+            and ct.name like concat('%', #{keyword}, '%')
+        </if>
+        order by ct.create_time desc
+    </select>
+
+    <select id="selectByCustomerId" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        select ct.id, ct.name, ct.color
+        from customer_tag ct
+        inner join customer_tag_relation ctr on ct.id = ctr.tag_id
+        where ctr.customer_id = #{customerId}
+        and ctr.organization_id = #{orgId}
+        order by ctr.create_time desc
+    </select>
+
+    <select id="countByName" resultType="int">
+        select count(*) from customer_tag
+        where name = #{name}
+        and organization_id = #{orgId}
+        <if test="excludeId != null and excludeId != ''">
+            and id != #{excludeId}
+        </if>
+    </select>
+
+    <delete id="deleteRelationByCustomerId">
+        delete from customer_tag_relation
+        where customer_id = #{customerId}
+        and organization_id = #{orgId}
+    </delete>
+
+    <delete id="deleteRelationByTagId">
+        delete from customer_tag_relation
+        where tag_id = #{tagId}
+        and organization_id = #{orgId}
+    </delete>
+
+    <select id="countCustomerByTagId" resultType="int">
+        select count(distinct customer_id) from customer_tag_relation
+        where tag_id = #{tagId}
+        and organization_id = #{orgId}
+    </select>
+
+    <select id="selectCustomerIdsByTagIds" resultType="java.lang.String">
+        select distinct ctr.customer_id
+        from customer_tag_relation ctr
+        where ctr.tag_id in
+        <foreach collection="tagIds" item="tagId" open="(" close=")" separator=",">
+            #{tagId}
+        </foreach>
+        and ctr.organization_id = #{orgId}
+    </select>
+
+</mapper>

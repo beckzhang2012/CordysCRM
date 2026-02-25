@@ -120,6 +120,14 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagOptionsUrl,
+  AddCustomerTagUrl,
+  UpdateCustomerTagUrl,
+  DeleteCustomerTagUrl,
+  SwitchCustomerTagUrl,
+  GetCustomerTagsUrl,
+  UpdateCustomerTagRelationUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -174,6 +182,11 @@ import type {
   UpdateCustomerParams,
   UpdateCustomerRelationItemParams,
   UpdateFollowPlanStatusParams,
+  CustomerTagItem,
+  CustomerTagAddParams,
+  CustomerTagUpdateParams,
+  CustomerTagTableParams,
+  CustomerTagRelationParams,
 } from '@lib/shared/models/customer';
 import type { CluePoolItem, FormDesignConfigDetailParams, OpportunityItem } from '@lib/shared/models/system/module';
 import { ValidateInfo } from '@lib/shared/models/system/org';
@@ -770,6 +783,38 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  function getCustomerTagList(data: CustomerTagTableParams) {
+    return CDR.post<CommonList<CustomerTagItem>>({ url: GetCustomerTagListUrl, data });
+  }
+
+  function getCustomerTagOptions(data: CustomerTagTableParams) {
+    return CDR.post<CustomerTagItem[]>({ url: GetCustomerTagOptionsUrl, data });
+  }
+
+  function addCustomerTag(data: CustomerTagAddParams) {
+    return CDR.post({ url: AddCustomerTagUrl, data });
+  }
+
+  function updateCustomerTag(data: CustomerTagUpdateParams) {
+    return CDR.post({ url: UpdateCustomerTagUrl, data });
+  }
+
+  function deleteCustomerTag(id: string) {
+    return CDR.get({ url: `${DeleteCustomerTagUrl}/${id}` });
+  }
+
+  function switchCustomerTag(id: string) {
+    return CDR.get({ url: `${SwitchCustomerTagUrl}/${id}` });
+  }
+
+  function getCustomerTags(customerId: string) {
+    return CDR.get<CustomerTagItem[]>({ url: `${GetCustomerTagsUrl}/${customerId}` });
+  }
+
+  function updateCustomerTagRelation(data: CustomerTagRelationParams) {
+    return CDR.post({ url: UpdateCustomerTagRelationUrl, data });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -891,5 +936,13 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    getCustomerTagList,
+    getCustomerTagOptions,
+    addCustomerTag,
+    updateCustomerTag,
+    deleteCustomerTag,
+    switchCustomerTag,
+    getCustomerTags,
+    updateCustomerTagRelation,
   };
 }

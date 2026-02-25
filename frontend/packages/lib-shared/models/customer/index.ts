@@ -361,3 +361,34 @@ export interface MergeAccountParams {
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
 }
+
+export interface CustomerTagItem {
+  id: string;
+  name: string;
+  color: string;
+  enable: boolean;
+  createUser: string;
+  updateUser: string;
+  createTime: number;
+  updateTime: number;
+  createUserName: string;
+  updateUserName: string;
+}
+
+export interface CustomerTagAddParams {
+  name: string;
+  color: string;
+}
+
+export interface CustomerTagUpdateParams extends CustomerTagAddParams {
+  id: string;
+}
+
+export interface CustomerTagTableParams extends TableQueryParams {
+  name?: string;
+}
+
+export interface CustomerTagRelationParams {
+  customerId: string;
+  tagIds: string[];
+}
