@@ -129,3 +129,12 @@ export const FixedAccountPoolViewUrl = 'pool/account/view/fixed';
 export const EnableAccountPoolViewUrl = 'pool/account/view/enable';
 export const DragAccountPoolViewUrl = 'pool/account/view/edit/pos';
 export const generateCustomerPoolChartUrl = '/pool/account/chart';
+
+// 客户提醒
+export const AddCustomerReminderUrl = '/account/reminder/add';
+export const UpdateCustomerReminderUrl = '/account/reminder/update';
+export const DeleteCustomerReminderUrl = '/account/reminder/delete';
+export const GetCustomerReminderListUrl = '/account/reminder/list';
+export const GetCustomerReminderPendingUrl = '/account/reminder/pending';
+export const GetCustomerReminderDetailUrl = '/account/reminder/get';
+export const GetCustomerReminderCountUrl = '/account/reminder/count';
