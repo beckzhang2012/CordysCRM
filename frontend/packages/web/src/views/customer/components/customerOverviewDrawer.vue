@@ -86,6 +86,11 @@
           :source-id="props.sourceId"
           :readonly="collaborationType === 'READ_ONLY' || props.readonly"
         />
+        <customerTag
+          v-else-if="activeTab === 'tag'"
+          :source-id="props.sourceId"
+          :readonly="collaborationType === 'READ_ONLY' || props.readonly"
+        />
         <ContractTimeline
           v-else-if="activeTab === 'contract'"
           :form-key="FormDesignKeyEnum.CONTRACT"
@@ -128,6 +133,7 @@
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
   import customerRelation from './customerRelation.vue';
+  import customerTag from './customerTag.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
 
@@ -246,6 +252,11 @@
       {
         name: 'collaborator',
         tab: t('customer.collaborator'),
+        enable: true,
+      },
+      {
+        name: 'tag',
+        tab: t('customer.tag'),
         enable: true,
       },
       {

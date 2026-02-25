@@ -138,6 +138,7 @@
   import useLocale from '@lib/shared/locale/useLocale';
   import { characterLimit } from '@lib/shared/method';
   import { ExportTableColumnItem } from '@lib/shared/models/common';
+  import { CustomerTagItem } from '@lib/shared/models/customer';
 
   import CrmAdvanceFilter from '@/components/pure/crm-advance-filter/index.vue';
   import { FilterForm, FilterFormItem, FilterResult } from '@/components/pure/crm-advance-filter/type';
@@ -160,7 +161,13 @@
   import customerOverviewDrawer from './customerOverviewDrawer.vue';
   import mergeAccountModal from './mergeAccountModal.vue';
 
-  import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer } from '@/api/modules';
+  import {
+    batchDeleteCustomer,
+    batchTransferCustomer,
+    deleteCustomer,
+    getCustomerTagOptions,
+    updateCustomer,
+  } from '@/api/modules';
   import { baseFilterConfigList } from '@/config/clue';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import useFormCreateTable from '@/hooks/useFormCreateTable';
@@ -206,6 +213,7 @@
     customerId: '',
     id: '',
   });
+  const tagOptions = ref<{ label: string; value: string; color?: string }[]>([]);
 
   function handleNewClick() {
     needInitDetail.value = false;
@@ -265,8 +273,7 @@
           tableRefreshId.value += 1;
           Message.success(t('common.deleteSuccess'));
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error(error);
+          // ignore error
         }
       },
     });
@@ -361,8 +368,7 @@
           Message.success(t('common.deleteSuccess'));
           tableRefreshId.value += 1;
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error(error);
+          // ignore error
         }
       },
     });
@@ -387,8 +393,7 @@
       transferForm.value.owner = null;
       tableRefreshId.value += 1;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log(error);
+      // ignore error
     } finally {
       transferLoading.value = false;
     }
@@ -658,6 +663,15 @@
       dataIndex: 'followTime',
       type: FieldTypeEnum.TIME_RANGE_PICKER,
     },
+    {
+      title: t('customer.tag'),
+      dataIndex: 'tagIds',
+      type: FieldTypeEnum.SELECT_MULTIPLE,
+      selectProps: {
+        options: tagOptions.value,
+        filterable: true,
+      },
+    },
     ...baseFilterConfigList,
   ]);
 
@@ -736,7 +750,7 @@
     }
   );
 
-  onMounted(() => {
+  onMounted(async () => {
     emit('init', {
       filterConfigList: filterConfigList.value,
       customFieldsFilterConfig: customFieldsFilterConfig.value as FilterFormItem[],
@@ -745,6 +759,18 @@
       activeFormKey.value = FormDesignKeyEnum.CUSTOMER;
       activeSourceId.value = route.query.id as string;
       showOverviewDrawer.value = true;
+    }
+    try {
+      const res = await getCustomerTagOptions({ pageSize: 0, pageNum: 0 });
+      tagOptions.value = res
+        .filter((tag: CustomerTagItem) => tag.enable)
+        .map((tag: CustomerTagItem) => ({
+          label: tag.name,
+          value: tag.id,
+          color: tag.color,
+        }));
+    } catch (error) {
+      // ignore error
     }
   });
 

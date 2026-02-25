@@ -35,6 +35,8 @@ export default {
   'customer.group': 'Group',
   'customer.subsidiary': 'Subsidiary',
   'customer.collaborator': 'Collaborator',
+  'customer.tag': 'Tag',
+  'customer.tagNamePlaceholder': 'Enter tag name',
   'customer.readOnly': 'Read Only',
   'customer.opportunityInfo': 'Opportunity Information',
   'customer.cooperation': 'Cooperation',

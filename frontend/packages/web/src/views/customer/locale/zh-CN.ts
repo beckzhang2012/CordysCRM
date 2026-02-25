@@ -32,6 +32,8 @@ export default {
   'customer.group': '集团',
   'customer.subsidiary': '子公司',
   'customer.collaborator': '协作成员',
+  'customer.tag': '标签',
+  'customer.tagNamePlaceholder': '请输入标签名称',
   'customer.readOnly': '只读',
   'customer.opportunityInfo': '商机信息',
   'customer.cooperation': '协作',
