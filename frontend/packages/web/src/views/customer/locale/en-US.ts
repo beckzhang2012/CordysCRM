@@ -65,4 +65,13 @@ export default {
     '3. The account after the merger, merged account contact, follow up plan, follow up records, business information, collaboration members later merge to the account',
   'customer.selectedMergeAccountTooltip':
     "Selected accounts: chosen from list; Other accounts: visible accounts; Owner assignment: only selected accounts' owners can be chosen; other accounts' owners remain unchanged",
+  'customer.setReminder': 'Set Reminder',
+  'customer.reminderTime': 'Reminder Time',
+  'customer.reminderContent': 'Reminder Content',
+  'customer.selectReminderTime': 'Please select reminder time',
+  'customer.inputReminderContent': 'Please input reminder content',
+  'customer.reminderList': 'Reminder List',
+  'customer.noReminder': 'No reminders',
+  'customer.reminderPending': 'Pending',
+  'customer.reminderNotified': 'Notified',
 };

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerReminderMapper">
+
+    <select id="listByCustomerId" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderResponse">
+        SELECT id, customer_id, customer_name, reminder_time, content, status, create_time, update_time
+        FROM customer_reminder
+        WHERE customer_id = #{customerId} AND reminder_user_id = #{userId} AND organization_id IS NOT NULL
+        ORDER BY reminder_time DESC
+    </select>
+
+    <select id="listPendingByUserId" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderResponse">
+        SELECT id, customer_id, customer_name, reminder_time, content, status, create_time, update_time
+        FROM customer_reminder
+        WHERE reminder_user_id = #{userId} AND organization_id = #{orgId} AND status = 'PENDING'
+        ORDER BY reminder_time ASC
+    </select>
+
+    <select id="listAllByUserId" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderResponse">
+        SELECT id, customer_id, customer_name, reminder_time, content, status, create_time, update_time
+        FROM customer_reminder
+        WHERE reminder_user_id = #{userId} AND organization_id = #{orgId}
+        ORDER BY reminder_time DESC
+    </select>
+
+    <select id="getById" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderResponse">
+        SELECT id, customer_id, customer_name, reminder_time, content, status, create_time, update_time
+        FROM customer_reminder
+        WHERE id = #{id} AND reminder_user_id = #{userId}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE customer_reminder SET status = #{status}, update_time = ${@java.lang.System@currentTimeMillis()}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM customer_reminder WHERE id = #{id} AND reminder_user_id = #{userId}
+    </delete>
+
+    <select id="getDueReminders" resultType="cn.cordys.crm.customer.domain.CustomerReminder">
+        SELECT id, customer_id, customer_name, reminder_time, content, status, organization_id, reminder_user_id, create_user, update_user, create_time, update_time
+        FROM customer_reminder
+        WHERE reminder_time &lt;= #{currentTime} AND status = 'PENDING' AND organization_id = #{orgId}
+    </select>
+
+    <select id="countPendingByUserId" resultType="int">
+        SELECT COUNT(*) FROM customer_reminder
+        WHERE reminder_user_id = #{userId} AND organization_id = #{orgId} AND status = 'PENDING'
+    </select>
+
+</mapper>

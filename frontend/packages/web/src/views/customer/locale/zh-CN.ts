@@ -60,4 +60,13 @@ export default {
     '3.客户合并后，被合并客户的联系人，跟进计划，跟进记录，商机信息，协作成员等会合并至主客户下',
   'customer.selectedMergeAccountTooltip':
     '已选客户：从列表中选定的客户；其他客户：数据可见负责的客户。负责人选择：已选客户：仅可选择已选客户的负责人；其他客户：负责人保持不变',
+  'customer.setReminder': '设置提醒',
+  'customer.reminderTime': '提醒时间',
+  'customer.reminderContent': '提醒内容',
+  'customer.selectReminderTime': '请选择提醒时间',
+  'customer.inputReminderContent': '请输入提醒内容',
+  'customer.reminderList': '提醒列表',
+  'customer.noReminder': '暂无提醒',
+  'customer.reminderPending': '待提醒',
+  'customer.reminderNotified': '已提醒',
 };

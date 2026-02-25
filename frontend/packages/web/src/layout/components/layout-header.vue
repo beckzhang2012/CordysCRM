@@ -48,6 +48,13 @@
               </n-badge>
             </n-button>
           </template>
+          <template #reminderSlot>
+            <n-button class="p-[8px]" quaternary @click="showReminderDrawer">
+              <n-badge :value="reminderCount" :show="reminderCount > 0">
+                <CrmIcon type="iconicon-alarmclock" :size="16" />
+              </n-badge>
+            </n-button>
+          </template>
           <template #agentSlot>
             <n-button class="p-[8px]" quaternary @click="showAgent">
               <CrmSvg name="icon_bot" :size="16" />
@@ -158,6 +165,7 @@
     </div>
     <MessageDrawer v-model:show="showMessageDrawer" />
     <licenseDrawer v-model:visible="showLicenseDrawer" />
+    <ReminderDrawer v-model:visible="showReminderListDrawer" />
     <Suspense>
       <CrmDuplicateCheckDrawer v-model:visible="showDuplicateCheckDrawer" />
     </Suspense>
@@ -189,7 +197,7 @@
   import licenseDrawer from '@/views/system/license/licenseDrawer.vue';
   import MessageDrawer from '@/views/system/message/components/messageDrawer.vue';
 
-  import { addApiKey, changeLocaleBackEnd } from '@/api/modules';
+  import { addApiKey, changeLocaleBackEnd, getCustomerReminderCount } from '@/api/modules';
   import { defaultPlatformLogo } from '@/config/business';
   import useModal from '@/hooks/useModal';
   import useAppStore from '@/store/modules/app';
@@ -201,6 +209,7 @@
 
   const agentDrawer = defineAsyncComponent(() => import('@/components/business/crm-agent-drawer/index.vue'));
   const CrmFollowDrawer = defineAsyncComponent(() => import('@/components/business/crm-follow-drawer/index.vue'));
+  const ReminderDrawer = defineAsyncComponent(() => import('@/views/customer/components/reminderDrawer.vue'));
 
   const route = useRoute();
 
@@ -343,6 +352,18 @@
     Professional: t('system.license.LicenseProfessional'),
   };
 
+  const reminderCount = ref(0);
+  const showReminderListDrawer = ref(false);
+
+  async function loadReminderCount() {
+    const count = await getCustomerReminderCount().catch(() => 0);
+    reminderCount.value = count || 0;
+  }
+
+  function showReminderDrawer() {
+    showReminderListDrawer.value = true;
+  }
+
   onBeforeMount(() => {
     appStore.getVersion();
     if (route.name !== WorkbenchRouteEnum.WORKBENCH_INDEX) {
@@ -351,6 +372,8 @@
     appStore.connectSystemMessageSSE(userStore.showSystemNotify);
     appStore.showSQLBot();
     userStore.initApiKeyList();
+    loadReminderCount();
+    setInterval(loadReminderCount, 60000);
   });
 
   const innerLogo = computed(() =>
