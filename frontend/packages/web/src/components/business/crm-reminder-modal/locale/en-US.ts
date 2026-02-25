@@ -1,0 +1,15 @@
+export default {
+  'reminder.setReminder': 'Set Reminder',
+  'reminder.remindTime': 'Remind Time',
+  'reminder.remindContent': 'Remind Content',
+  'reminder.viewReminders': 'View Reminders',
+  'reminder.pleaseSelectRemindTime': 'Please select remind time',
+  'reminder.noPendingReminders': 'No pending reminders',
+  'reminder.reminderList': 'Reminder List',
+  'reminder.complete': 'Complete',
+  'reminder.cancel': 'Cancel',
+  'reminder.delete': 'Delete',
+  'reminder.pending': 'Pending',
+  'reminder.completed': 'Completed',
+  'reminder.cancelled': 'Cancelled',
+};

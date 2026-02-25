@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.reminder.mapper.ExtReminderMapper">
+
+    <select id="selectList" resultType="cn.cordys.crm.reminder.dto.response.ReminderListResponse">
+        SELECT
+        r.id,
+        r.business_type,
+        r.business_id,
+        r.remind_time,
+        r.content,
+        r.status,
+        r.owner,
+        r.create_time,
+        CASE
+            WHEN r.business_type = 'CUSTOMER' THEN c.name
+            WHEN r.business_type = 'OPPORTUNITY' THEN o.name
+            WHEN r.business_type = 'CLUE' THEN cl.name
+        END as business_name,
+        u.name as owner_name
+        FROM
+        reminder r
+        LEFT JOIN customer c ON c.id = r.business_id AND r.business_type = 'CUSTOMER'
+        LEFT JOIN opportunity o ON o.id = r.business_id AND r.business_type = 'OPPORTUNITY'
+        LEFT JOIN clue cl ON cl.id = r.business_id AND r.business_type = 'CLUE'
+        LEFT JOIN user u ON u.id = r.owner
+        WHERE r.organization_id = #{orgId}
+        <if test="request.businessType != null and request.businessType != ''">
+            AND r.business_type = #{request.businessType}
+        </if>
+        <if test="request.businessId != null and request.businessId != ''">
+            AND r.business_id = #{request.businessId}
+        </if>
+        <if test="request.status != null and request.status != ''">
+            AND r.status = #{request.status}
+        </if>
+        AND r.owner = #{userId}
+        ORDER BY r.remind_time DESC
+    </select>
+
+</mapper>

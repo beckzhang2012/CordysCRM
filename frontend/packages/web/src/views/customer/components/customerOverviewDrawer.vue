@@ -105,6 +105,12 @@
         type="warning"
         @refresh="refresh"
       />
+      <ReminderModal
+        v-model:show="showReminderModal"
+        :business-type="ReminderBusinessType.CUSTOMER"
+        :business-id="props.sourceId"
+        @success="refreshKey += 1"
+      />
     </template>
   </CrmOverviewDrawer>
 </template>
@@ -126,6 +132,8 @@
   import CrmOverviewDrawer from '@/components/business/crm-overview-drawer/index.vue';
   import type { TabContentItem } from '@/components/business/crm-tab-setting/type';
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
+import ReminderModal from '@/components/business/crm-reminder-modal/index.vue';
+import { ReminderBusinessType } from '@lib/shared/models/reminder';
   import collaborator from './collaborator.vue';
   import customerRelation from './customerRelation.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
@@ -161,6 +169,7 @@
   const collaborationType = ref<CollaborationType>();
   const sourceName = ref('');
   const descriptionRef = ref<InstanceType<typeof CrmFormDescription>>();
+  const showReminderModal = ref(false);
   const buttonList = computed<ActionsItem[]>(() => {
     if (collaborationType.value || props.readonly) {
       return [];
@@ -205,6 +214,13 @@
         danger: true,
         class: 'n-btn-outline-primary',
         permission: ['CUSTOMER_MANAGEMENT:DELETE'],
+      },
+      {
+        label: t('reminder.setReminder'),
+        key: 'setReminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
       },
     ];
   });
@@ -327,6 +343,8 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      showReminderModal.value = true;
     }
   }
 

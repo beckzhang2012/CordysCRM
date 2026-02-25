@@ -1,0 +1,15 @@
+export default {
+  'reminder.setReminder': '设置提醒',
+  'reminder.remindTime': '提醒时间',
+  'reminder.remindContent': '提醒内容',
+  'reminder.viewReminders': '查看提醒',
+  'reminder.pleaseSelectRemindTime': '请选择提醒时间',
+  'reminder.noPendingReminders': '暂无待提醒的内容',
+  'reminder.reminderList': '提醒列表',
+  'reminder.complete': '已完成',
+  'reminder.cancel': '取消',
+  'reminder.delete': '删除',
+  'reminder.pending': '待提醒',
+  'reminder.completed': '已完成',
+  'reminder.cancelled': '已取消',
+};
