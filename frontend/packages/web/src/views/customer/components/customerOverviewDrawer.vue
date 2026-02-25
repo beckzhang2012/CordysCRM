@@ -5,6 +5,7 @@
     v-model:active-tab="activeTab"
     :tab-list="tabList"
     :button-list="buttonList"
+    :button-more-list="buttonMoreList"
     :title="sourceName"
     :form-key="FormDesignKeyEnum.CUSTOMER"
     :source-id="props.sourceId"
@@ -107,6 +108,12 @@
       />
     </template>
   </CrmOverviewDrawer>
+  <ReminderModal
+    v-model:show="showReminderModal"
+    :customer-id="props.sourceId"
+    :customer-name="sourceName"
+    @success="handleReminderSuccess"
+  />
 </template>
 
 <script setup lang="ts">
@@ -124,6 +131,7 @@
   import CrmHeaderTable from '@/components/business/crm-header-table/index.vue';
   import CrmMoveModal from '@/components/business/crm-move-modal/index.vue';
   import CrmOverviewDrawer from '@/components/business/crm-overview-drawer/index.vue';
+  import ReminderModal from '@/components/business/crm-reminder/reminderModal.vue';
   import type { TabContentItem } from '@/components/business/crm-tab-setting/type';
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
@@ -208,6 +216,23 @@
       },
     ];
   });
+
+  const buttonMoreList = computed<ActionsItem[]>(() => {
+    if (collaborationType.value || props.readonly) {
+      return [];
+    }
+    return [
+      {
+        label: t('customer.reminder.setReminder'),
+        key: 'setReminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+      },
+    ];
+  });
+
+  const showReminderModal = ref(false);
 
   const activeTab = ref('contact');
   const tabList = computed<TabContentItem[]>(() => {
@@ -327,7 +352,13 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      showReminderModal.value = true;
     }
+  }
+
+  function handleReminderSuccess() {
+    Message.success(t('customer.reminder.setSuccess'));
   }
 
   function handleSaved() {

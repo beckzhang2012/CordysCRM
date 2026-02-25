@@ -347,4 +347,6 @@ export default {
   'common.approvedSuccess': '审批通过',
   'common.unApprovedSuccess': '审批不通过',
   'common.skipped': '跳过',
+  'common.markAsRead': '标记已读',
+  'common.view': '查看',
 };
