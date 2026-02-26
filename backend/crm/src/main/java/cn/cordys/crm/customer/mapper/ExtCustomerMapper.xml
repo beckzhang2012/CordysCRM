@@ -100,6 +100,13 @@
             and c.name like concat('%', #{request.keyword},'%')
         </if>
 
+        <if test="request.tagId != null and request.tagId != ''">
+            and exists (
+                select 1 from customer_tag_relation ctr
+                where ctr.customer_id = c.id and ctr.tag_id = #{request.tagId}
+            )
+        </if>
+
         <include refid="filters">
             <property name="filters" value="request.filters"/>
         </include>

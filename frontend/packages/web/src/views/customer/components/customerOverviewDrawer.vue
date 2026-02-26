@@ -21,6 +21,7 @@
     </template>
     <template #left>
       <div class="h-full overflow-hidden">
+        <customerTag :source-id="props.sourceId" :readonly="collaborationType === 'READ_ONLY' || props.readonly" />
         <CrmFormDescription
           ref="descriptionRef"
           :form-key="FormDesignKeyEnum.CUSTOMER"
@@ -128,6 +129,7 @@
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
   import customerRelation from './customerRelation.vue';
+  import customerTag from './customerTag.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
 

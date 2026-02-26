@@ -20,6 +20,7 @@
     </template>
     <template #actionLeft>
       <div class="flex items-center gap-[12px]">
+        <tagFilter v-if="!props.readonly" v-model="selectedTagId" @change="handleTagFilterChange" />
         <n-button
           v-if="
             activeTab !== CustomerSearchTypeEnum.CUSTOMER_COLLABORATION &&
@@ -159,6 +160,7 @@
   import CrmViewSelect from '@/components/business/crm-view-select/index.vue';
   import customerOverviewDrawer from './customerOverviewDrawer.vue';
   import mergeAccountModal from './mergeAccountModal.vue';
+  import tagFilter from './tagFilter.vue';
 
   import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer } from '@/api/modules';
   import { baseFilterConfigList } from '@/config/clue';
@@ -206,6 +208,7 @@
     customerId: '',
     id: '',
   });
+  const selectedTagId = ref<string>();
 
   function handleNewClick() {
     needInitDetail.value = false;
@@ -685,6 +688,13 @@
     loadList();
     crmTableRef.value?.scrollTo({ top: 0 });
   }
+
+  function handleTagFilterChange() {
+    setLoadListParams({ keyword: keyword.value, viewId: activeTab.value, tagId: selectedTagId.value });
+    loadList();
+    crmTableRef.value?.scrollTo({ top: 0 });
+  }
+
   handleSearchData.value = searchData;
 
   function handleFormCreateSaved(res: any) {
