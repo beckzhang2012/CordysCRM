@@ -8,6 +8,7 @@ import {
   AddCustomerFollowRecordUrl,
   AddCustomerOpenSeaUrl,
   AddCustomerRelationItemUrl,
+  AddCustomerTagUrl,
   AddCustomerUrl,
   AddCustomerViewUrl,
   AssignOpenSeaCustomerUrl,
@@ -20,6 +21,7 @@ import {
   BatchTransferCustomerUrl,
   BatchUpdateAccountUrl,
   BatchUpdateContactUrl,
+  BindCustomerTagUrl,
   CancelCustomerFollowPlanUrl,
   CheckOpportunityContactUrl,
   ContactListUnderCustomerUrl,
@@ -31,6 +33,7 @@ import {
   DeleteCustomerFollowRecordUrl,
   DeleteCustomerOpenSeaUrl,
   DeleteCustomerRelationItemUrl,
+  DeleteCustomerTagUrl,
   DeleteCustomerUrl,
   DeleteCustomerViewUrl,
   DeleteOpenSeaCustomerUrl,
@@ -83,6 +86,9 @@ import {
   GetCustomerOptionsUrl,
   GetCustomerRelationListUrl,
   GetCustomerTabUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagPageUrl,
+  GetCustomerTagsByCustomerIdUrl,
   GetCustomerUrl,
   GetCustomerViewDetailUrl,
   GetCustomerViewListUrl,
@@ -105,6 +111,7 @@ import {
   PreCheckContactImportUrl,
   SaveCustomerRelationUrl,
   SwitchCustomerOpenSeaUrl,
+  UnbindCustomerTagUrl,
   UpdateAccountPoolViewUrl,
   UpdateContactViewUrl,
   UpdateCustomerCollaborationUrl,
@@ -114,6 +121,7 @@ import {
   UpdateCustomerFollowRecordUrl,
   UpdateCustomerOpenSeaUrl,
   UpdateCustomerRelationItemUrl,
+  UpdateCustomerTagUrl,
   UpdateCustomerUrl,
   UpdateCustomerViewUrl,
   GetAccountContractListUrl,
@@ -770,6 +778,41 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  // 客户标签
+  function addCustomerTag(data: { name: string; color?: string }) {
+    return CDR.post({ url: AddCustomerTagUrl, data });
+  }
+
+  function updateCustomerTag(data: { id: string; name: string; color?: string }) {
+    return CDR.post({ url: UpdateCustomerTagUrl, data });
+  }
+
+  function deleteCustomerTag(id: string) {
+    return CDR.get({ url: `${DeleteCustomerTagUrl}/${id}` });
+  }
+
+  function getCustomerTagPage(data: { current: number; pageSize: number; name?: string }) {
+    return CDR.post({ url: GetCustomerTagPageUrl, data });
+  }
+
+  function getCustomerTagList() {
+    return CDR.get<{ id: string; name: string; color: string; createTime: number }[]>({ url: GetCustomerTagListUrl });
+  }
+
+  function getCustomerTagsByCustomerId(customerId: string) {
+    return CDR.get<{ id: string; name: string; color: string; createTime: number }[]>({
+      url: `${GetCustomerTagsByCustomerIdUrl}/${customerId}`,
+    });
+  }
+
+  function bindCustomerTag(data: { customerId: string; tagIds: string[] }) {
+    return CDR.post({ url: BindCustomerTagUrl, data });
+  }
+
+  function unbindCustomerTag(customerId: string, tagId: string) {
+    return CDR.get({ url: `${UnbindCustomerTagUrl}/${customerId}/${tagId}` });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -891,5 +934,13 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    addCustomerTag,
+    updateCustomerTag,
+    deleteCustomerTag,
+    getCustomerTagPage,
+    getCustomerTagList,
+    getCustomerTagsByCustomerId,
+    bindCustomerTag,
+    unbindCustomerTag,
   };
 }

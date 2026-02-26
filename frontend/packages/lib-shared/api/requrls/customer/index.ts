@@ -129,3 +129,13 @@ export const FixedAccountPoolViewUrl = 'pool/account/view/fixed';
 export const EnableAccountPoolViewUrl = 'pool/account/view/enable';
 export const DragAccountPoolViewUrl = 'pool/account/view/edit/pos';
 export const generateCustomerPoolChartUrl = '/pool/account/chart';
+
+// 客户标签
+export const AddCustomerTagUrl = '/account/tag/add';
+export const UpdateCustomerTagUrl = '/account/tag/update';
+export const DeleteCustomerTagUrl = '/account/tag/delete';
+export const GetCustomerTagPageUrl = '/account/tag/page';
+export const GetCustomerTagListUrl = '/account/tag/list';
+export const GetCustomerTagsByCustomerIdUrl = '/account/tag/customer';
+export const BindCustomerTagUrl = '/account/tag/bind';
+export const UnbindCustomerTagUrl = '/account/tag/unbind';

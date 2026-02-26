@@ -65,4 +65,15 @@ export default {
     '3. The account after the merger, merged account contact, follow up plan, follow up records, business information, collaboration members later merge to the account',
   'customer.selectedMergeAccountTooltip':
     "Selected accounts: chosen from list; Other accounts: visible accounts; Owner assignment: only selected accounts' owners can be chosen; other accounts' owners remain unchanged",
+  'customer.tag': 'Tag',
+  'customer.noTag': 'No tags',
+  'customer.selectTag': 'Select Tag',
+  'customer.searchTag': 'Search tag',
+  'customer.noTagAvailable': 'No tags available',
+  'customer.createTag': 'Create Tag',
+  'customer.tagName': 'Tag Name',
+  'customer.tagNamePlaceholder': 'Please enter tag name',
+  'customer.tagNameRequired': 'Tag name is required',
+  'customer.tagColor': 'Tag Color',
+  'customer.tagFilter': 'Filter by Tag',
 };

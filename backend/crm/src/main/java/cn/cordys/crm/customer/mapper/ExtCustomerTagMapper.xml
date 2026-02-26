@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <insert id="insertTag" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        INSERT INTO customer_tag (id, name, color, organization_id, create_time, update_time, create_user, update_user)
+        VALUES (#{id}, #{name}, #{color}, #{organizationId}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+    </insert>
+
+    <update id="updateTag" parameterType="cn.cordys.crm.customer.domain.CustomerTag">
+        UPDATE customer_tag
+        SET name = #{name},
+            color = #{color},
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteTag">
+        DELETE FROM customer_tag WHERE id = #{id}
+    </delete>
+
+    <select id="selectTagById" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT id, name, color, organization_id, create_time, update_time, create_user, update_user
+        FROM customer_tag
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectTagList" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT id, name, color, organization_id, create_time, update_time, create_user, update_user
+        FROM customer_tag
+        WHERE organization_id = #{organizationId}
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insertRelation" parameterType="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        INSERT INTO customer_tag_relation (id, customer_id, tag_id, create_time, create_user)
+        VALUES (#{id}, #{customerId}, #{tagId}, #{createTime}, #{createUser})
+    </insert>
+
+    <delete id="deleteRelationByTagId">
+        DELETE FROM customer_tag_relation WHERE tag_id = #{tagId}
+    </delete>
+
+    <delete id="deleteRelationByCustomerIdAndTagId">
+        DELETE FROM customer_tag_relation WHERE customer_id = #{customerId} AND tag_id = #{tagId}
+    </delete>
+
+    <delete id="deleteRelationByCustomerIdAndTagIds">
+        DELETE FROM customer_tag_relation 
+        WHERE customer_id = #{customerId} AND tag_id IN
+        <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+            #{tagId}
+        </foreach>
+    </delete>
+
+    <select id="selectRelationsByCustomerId" resultType="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        SELECT id, customer_id, tag_id, create_time, create_user
+        FROM customer_tag_relation
+        WHERE customer_id = #{customerId}
+    </select>
+
+    <select id="selectRelationsByTagId" resultType="cn.cordys.crm.customer.domain.CustomerTagRelation">
+        SELECT id, customer_id, tag_id, create_time, create_user
+        FROM customer_tag_relation
+        WHERE tag_id = #{tagId}
+    </select>
+
+    <select id="selectTagsByCustomerId" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT t.id, t.name, t.color, t.organization_id, t.create_time, t.update_time, t.create_user, t.update_user
+        FROM customer_tag t
+        INNER JOIN customer_tag_relation r ON t.id = r.tag_id
+        WHERE r.customer_id = #{customerId}
+        ORDER BY t.create_time DESC
+    </select>
+
+</mapper>
