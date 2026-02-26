@@ -91,4 +91,7 @@ public class CustomerGetResponse {
     @Schema(description = "附件集合")
     private Map<String, List<Attachment>> attachmentMap;
 
+    @Schema(description = "标签列表")
+    private List<CustomerTagResponse> tags;
+
 }

@@ -120,6 +120,14 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  AddCustomerTagUrl,
+  UpdateCustomerTagUrl,
+  DeleteCustomerTagUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagsUrl,
+  BindCustomerTagsUrl,
+  AddTagToCustomerUrl,
+  RemoveTagFromCustomerUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -152,6 +160,7 @@ import type {
   CustomerOptionsItem,
   CustomerTabHidden,
   CustomerTableParams,
+  CustomerTagItem,
   FollowDetailItem,
   MergeAccountParams,
   MoveToPublicPoolParams,
@@ -891,5 +900,14 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    // 客户标签
+    addCustomerTag: (data: { name: string; color?: string }) => CDR.post({ url: AddCustomerTagUrl, data }),
+    updateCustomerTag: (data: { id: string; name: string; color?: string }) => CDR.post({ url: UpdateCustomerTagUrl, data }),
+    deleteCustomerTag: (id: string) => CDR.get({ url: `${DeleteCustomerTagUrl}/${id}` }),
+    getCustomerTagList: (data?: { keyword?: string }) => CDR.post<{ data: CustomerTagItem[] }>({ url: GetCustomerTagListUrl, data }),
+    getCustomerTags: (customerId: string) => CDR.post<{ data: CustomerTagItem[] }>({ url: `${GetCustomerTagsUrl}/${customerId}` }),
+    bindCustomerTags: (data: { customerId: string; tagIds: string[] }) => CDR.post({ url: BindCustomerTagsUrl, data }),
+    addTagToCustomer: (customerId: string, tagId: string) => CDR.get({ url: AddTagToCustomerUrl, params: { customerId, tagId } }),
+    removeTagFromCustomer: (customerId: string, tagId: string) => CDR.get({ url: RemoveTagFromCustomerUrl, params: { customerId, tagId } }),
   };
 }

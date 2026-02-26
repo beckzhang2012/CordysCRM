@@ -33,9 +33,11 @@ import cn.cordys.crm.customer.domain.*;
 import cn.cordys.crm.customer.dto.request.*;
 import cn.cordys.crm.customer.dto.response.CustomerGetResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
+import cn.cordys.crm.customer.dto.response.CustomerTagResponse;
 import cn.cordys.crm.customer.mapper.ExtCustomerContactMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerPoolMapper;
+import cn.cordys.crm.customer.mapper.ExtCustomerTagMapper;
 import cn.cordys.crm.follow.domain.FollowUpPlan;
 import cn.cordys.crm.follow.domain.FollowUpRecord;
 import cn.cordys.crm.follow.mapper.ExtFollowUpPlanMapper;
@@ -153,6 +155,8 @@ public class CustomerService {
     private BaseMapper<CustomerCollaboration> customerCollaborationMapper;
     @Resource
     private BaseMapper<CustomerContact> customerContactMapper;
+    @Resource
+    private ExtCustomerTagMapper extCustomerTagMapper;
 
     public PagerWithOption<List<CustomerListResponse>> list(CustomerPageRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -254,10 +258,21 @@ public class CustomerService {
         List<Dict> dictList = dictConf.getDictList();
         Map<String, String> dictMap = dictList.stream().collect(Collectors.toMap(Dict::getId, Dict::getName));
 
+        // 批量查询客户标签
+        Map<String, List<CustomerTagResponse>> customerTagsMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(customerIds)) {
+            for (String customerId : customerIds) {
+                List<CustomerTagResponse> tags = extCustomerTagMapper.listByCustomerId(customerId);
+                customerTagsMap.put(customerId, tags);
+            }
+        }
+
         list.forEach(customerListResponse -> {
             // 获取自定义字段
             List<BaseModuleFieldValue> customerFields = caseCustomFiledMap.get(customerListResponse.getId());
             customerListResponse.setModuleFields(customerFields);
+            // 设置标签
+            customerListResponse.setTags(customerTagsMap.getOrDefault(customerListResponse.getId(), new ArrayList<>()));
             // 设置回收公海
             CustomerPool reservePool = ownersDefaultPoolMap.get(customerListResponse.getOwner());
             customerListResponse.setRecyclePoolName(reservePool != null ? reservePool.getName() : null);
@@ -384,6 +399,10 @@ public class CustomerService {
 
         // 附件信息
         customerGetResponse.setAttachmentMap(moduleFormService.getAttachmentMap(customerFormConfig, customerFields));
+
+        // 查询客户标签
+        List<CustomerTagResponse> tags = extCustomerTagMapper.listByCustomerId(id);
+        customerGetResponse.setTags(tags);
 
         return customerGetResponse;
     }

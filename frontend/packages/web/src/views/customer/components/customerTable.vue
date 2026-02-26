@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
   import { useRoute } from 'vue-router';
-  import { DataTableRowKey, NButton, useMessage } from 'naive-ui';
+  import { DataTableRowKey, NButton, NTag, useMessage } from 'naive-ui';
 
   import { CustomerSearchTypeEnum } from '@lib/shared/enums/customerEnum';
   import { FieldTypeEnum, FormDesignKeyEnum, FormLinkScenarioEnum } from '@lib/shared/enums/formDesignEnum';
@@ -138,6 +138,7 @@
   import useLocale from '@lib/shared/locale/useLocale';
   import { characterLimit } from '@lib/shared/method';
   import { ExportTableColumnItem } from '@lib/shared/models/common';
+  import type { CustomerTagItem } from '@lib/shared/models/customer';
 
   import CrmAdvanceFilter from '@/components/pure/crm-advance-filter/index.vue';
   import { FilterForm, FilterFormItem, FilterResult } from '@/components/pure/crm-advance-filter/type';
@@ -160,7 +161,13 @@
   import customerOverviewDrawer from './customerOverviewDrawer.vue';
   import mergeAccountModal from './mergeAccountModal.vue';
 
-  import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer } from '@/api/modules';
+  import {
+    batchDeleteCustomer,
+    batchTransferCustomer,
+    deleteCustomer,
+    getCustomerTagList,
+    updateCustomer,
+  } from '@/api/modules';
   import { baseFilterConfigList } from '@/config/clue';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import useFormCreateTable from '@/hooks/useFormCreateTable';
@@ -591,6 +598,24 @@
               { default: () => row.clueCount }
             );
       },
+      tags: (row: any) => {
+        const tags = row.tags || [];
+        if (tags.length === 0) return '-';
+        return h(
+          'div',
+          { class: 'flex flex-wrap gap-1' },
+          tags.map((tag: CustomerTagItem) =>
+            h(
+              NTag,
+              {
+                size: 'small',
+                color: { color: tag.color, textColor: '#fff' },
+              },
+              { default: () => tag.name }
+            )
+          )
+        );
+      },
     },
     permission: [
       'CUSTOMER_MANAGEMENT:RECYCLE',
@@ -632,6 +657,22 @@
     showExportModal.value = true;
   }
 
+  // 标签选项
+  const tagOptions = ref<{ label: string; value: string }[]>([]);
+
+  // 加载标签选项
+  async function loadTagOptions() {
+    try {
+      const res = await getCustomerTagList();
+      tagOptions.value = (res.data || []).map((tag: CustomerTagItem) => ({
+        label: tag.name,
+        value: tag.id,
+      }));
+    } catch (error) {
+      console.error('Failed to load tag options:', error);
+    }
+  }
+
   const filterConfigList = computed<FilterFormItem[]>(() => [
     {
       title: t('opportunity.department'),
@@ -658,8 +699,22 @@
       dataIndex: 'followTime',
       type: FieldTypeEnum.TIME_RANGE_PICKER,
     },
+    {
+      title: t('customer.tag.title'),
+      dataIndex: 'tagIds',
+      type: FieldTypeEnum.SELECT,
+      selectProps: {
+        multiple: true,
+        options: tagOptions.value,
+        placeholder: t('customer.tag.select'),
+      },
+    },
     ...baseFilterConfigList,
   ]);
+
+  onMounted(() => {
+    loadTagOptions();
+  });
 
   const exportColumns = computed<ExportTableColumnItem[]>(() =>
     getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[])
