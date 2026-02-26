@@ -38,6 +38,7 @@ export interface CustomerListItem {
   collectionTime: number;
   reservedDays: number; // 剩余归属天数
   moduleFields: ModuleField[];
+  tags?: CustomerTagItem[]; // 标签列表
 }
 
 export interface CustomerDetail {
@@ -360,4 +361,12 @@ export interface MergeAccountParams {
   mergeIds: string[]; // 合并客户ids
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
+}
+
+// 客户标签
+export interface CustomerTagItem {
+  id: string;
+  name: string;
+  color: string;
+  createTime: number;
 }

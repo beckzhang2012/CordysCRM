@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerTagMapper">
+
+    <select id="listByOrgId" resultType="cn.cordys.crm.customer.dto.response.CustomerTagResponse">
+        SELECT
+            t.id,
+            t.name,
+            t.color,
+            t.create_time as createTime
+        FROM customer_tag t
+        WHERE t.organization_id = #{orgId}
+          AND t.deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND t.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY t.create_time DESC
+    </select>
+
+    <select id="listByCustomerId" resultType="cn.cordys.crm.customer.dto.response.CustomerTagResponse">
+        SELECT
+            t.id,
+            t.name,
+            t.color,
+            t.create_time as createTime
+        FROM customer_tag t
+        INNER JOIN customer_tag_relation tr ON t.id = tr.tag_id
+        WHERE tr.customer_id = #{customerId}
+          AND t.deleted = 0
+          AND tr.deleted = 0
+        ORDER BY tr.create_time DESC
+    </select>
+
+    <insert id="batchInsertRelations">
+        INSERT INTO customer_tag_relation (id, customer_id, tag_id, organization_id, create_user, create_time, deleted)
+        VALUES
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (REPLACE(UUID(), '-', ''), #{customerId}, #{tagId}, #{orgId}, #{userId}, UNIX_TIMESTAMP() * 1000, 0)
+        </foreach>
+    </insert>
+
+    <update id="deleteRelation">
+        UPDATE customer_tag_relation
+        SET deleted = 1
+        WHERE customer_id = #{customerId}
+          AND tag_id = #{tagId}
+          AND deleted = 0
+    </update>
+
+    <update id="deleteRelationsByCustomerId">
+        UPDATE customer_tag_relation
+        SET deleted = 1
+        WHERE customer_id = #{customerId}
+          AND deleted = 0
+    </update>
+
+    <select id="countByName" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM customer_tag
+        WHERE name = #{name}
+          AND organization_id = #{orgId}
+          AND deleted = 0
+        <if test="excludeId != null and excludeId != ''">
+          AND id != #{excludeId}
+        </if>
+    </select>
+
+</mapper>
