@@ -42,8 +42,8 @@
             </n-popselect>
           </template>
           <template #alertsSlot>
-            <n-button class="p-[8px]" quaternary @click="showMessage">
-              <n-badge value="1" dot :show="showBadge">
+            <n-button class="p-[8px]" quaternary @click="showReminderDrawer = true">
+              <n-badge :value="reminderCount" :show="reminderCount > 0">
                 <CrmIcon type="iconicon-alarmclock" :size="16" />
               </n-badge>
             </n-button>
@@ -164,6 +164,7 @@
   </n-layout-header>
   <agentDrawer v-model:visible="showAgentDrawer" />
   <CrmFollowDrawer v-model:visible="showFollowDrawer" />
+  <CustomerReminderDrawer v-model:show="showReminderDrawer" />
 </template>
 
 <script setup lang="ts">
@@ -188,8 +189,10 @@
   import CrmTopMenu from '@/components/business/crm-top-menu/index.vue';
   import licenseDrawer from '@/views/system/license/licenseDrawer.vue';
   import MessageDrawer from '@/views/system/message/components/messageDrawer.vue';
+  import CustomerReminderDrawer from '@/components/business/crm-customer-reminder-drawer/index.vue';
 
   import { addApiKey, changeLocaleBackEnd } from '@/api/modules';
+  import { getCustomerReminderCount } from '@lib/shared/api/modules/customer';
   import { defaultPlatformLogo } from '@/config/business';
   import useModal from '@/hooks/useModal';
   import useAppStore from '@/store/modules/app';
@@ -289,6 +292,18 @@
 
   const showFollowDrawer = ref(false);
 
+  const showReminderDrawer = ref(false);
+  const reminderCount = ref(0);
+
+  async function fetchReminderCount() {
+    try {
+      const res = await getCustomerReminderCount();
+      reminderCount.value = res.data.data || 0;
+    } catch (error) {
+      console.error('Failed to fetch reminder count:', error);
+    }
+  }
+
   const { copy, isSupported } = useClipboard({ legacy: true });
   function copyVersion(version: string) {
     if (isSupported) {
@@ -351,6 +366,7 @@
     appStore.connectSystemMessageSSE(userStore.showSystemNotify);
     appStore.showSQLBot();
     userStore.initApiKeyList();
+    fetchReminderCount();
   });
 
   const innerLogo = computed(() =>

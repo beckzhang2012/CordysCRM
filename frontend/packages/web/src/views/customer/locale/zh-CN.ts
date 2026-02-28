@@ -54,6 +54,13 @@ export default {
   'customer.selectedAccount': '已选客户',
   'customer.otherAccount': '其他客户',
   'customer.mergeRules': '合并规则',
+  'customer.reminder': '设置提醒',
+  'customer.reminderTime': '提醒时间',
+  'customer.reminderContent': '提醒内容',
+  'customer.reminderContentPlaceholder': '请输入提醒内容',
+  'customer.reminderTimeRequired': '请选择提醒时间',
+  'customer.reminderContentRequired': '请输入提醒内容',
+  'customer.reminderAddSuccess': '提醒设置成功',
   'customer.selectedAccountMergeTip': '1.将所选客户合并后，可选择合并后主客户及要保留的数据',
   'customer.afterMergeDeleteAccountBaseInfoTip': '2.合并后，系统仅保留主客户的基本信息，被合并客户的基本信息将会被删除',
   'customer.afterMergeInfoTip':

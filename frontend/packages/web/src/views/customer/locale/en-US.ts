@@ -59,6 +59,13 @@ export default {
   'customer.selectedAccount': 'Selected accounts',
   'customer.otherAccount': 'Other accounts',
   'customer.mergeRules': 'Merge rules',
+  'customer.reminder': 'Set Reminder',
+  'customer.reminderTime': 'Reminder Time',
+  'customer.reminderContent': 'Reminder Content',
+  'customer.reminderContentPlaceholder': 'Please enter reminder content',
+  'customer.reminderTimeRequired': 'Please select reminder time',
+  'customer.reminderContentRequired': 'Please enter reminder content',
+  'customer.reminderAddSuccess': 'Reminder set successfully',
   'customer.selectedAccountMergeTip': '1. Select primary account and data to retain after merge',
   'customer.afterMergeDeleteAccountBaseInfoTip': "2. Only primary account's basic info will be kept",
   'customer.afterMergeInfoTip':

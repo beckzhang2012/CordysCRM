@@ -107,6 +107,14 @@
       />
     </template>
   </CrmOverviewDrawer>
+
+  <customerReminderModal
+    ref="reminderModalRef"
+    :customer-id="props.sourceId"
+    :customer-name="sourceName"
+    @close="handleReminderClose"
+    @success="handleReminderSuccess"
+  />
 </template>
 
 <script setup lang="ts">
@@ -128,6 +136,7 @@
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
   import customerRelation from './customerRelation.vue';
+  import customerReminderModal from './customerReminderModal.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
 
@@ -196,6 +205,14 @@
         ghost: true,
         class: 'n-btn-outline-primary',
         permission: ['CUSTOMER_MANAGEMENT:RECYCLE'],
+      },
+      {
+        label: t('customer.reminder'),
+        key: 'reminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+        permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
       },
       {
         label: t('common.delete'),
@@ -320,6 +337,20 @@
     showMoveModal.value = true;
   }
 
+  const reminderModalRef = ref<InstanceType<typeof customerReminderModal>>();
+  function handleOpenReminder() {
+    reminderModalRef.value?.open();
+  }
+
+  function handleReminderClose() {
+    // 对话框关闭时的回调
+  }
+
+  function handleReminderSuccess() {
+    // 提醒设置成功时的回调
+    emit('saved');
+  }
+
   function handleButtonSelect(key: string) {
     if (key === 'delete') {
       handleDelete();
@@ -327,6 +358,8 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'reminder') {
+      handleOpenReminder();
     }
   }
 

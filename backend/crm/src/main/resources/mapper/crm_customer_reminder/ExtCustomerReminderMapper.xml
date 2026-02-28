@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerReminderMapper">
+
+    <resultMap id="BaseResultMap" type="cn.cordys.crm.customer.domain.CustomerReminder">
+        <id column="id" property="id"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="reminder_time" property="reminderTime"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createUser"/>
+        <result column="created_time" property="createTime"/>
+        <result column="updated_by" property="updateUser"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="cn.cordys.crm.customer.domain.CustomerReminder">
+        INSERT INTO crm_customer_reminder (
+            id, customer_id, customer_name, user_id, user_name,
+            reminder_time, content, status, created_by, created_time
+        ) VALUES (
+            #{reminder.id}, #{reminder.customerId}, #{reminder.customerName},
+            #{reminder.userId}, #{reminder.userName}, #{reminder.reminderTime},
+            #{reminder.content}, #{reminder.status}, #{reminder.createUser}, NOW()
+        )
+    </insert>
+
+    <update id="update" parameterType="cn.cordys.crm.customer.domain.CustomerReminder">
+        UPDATE crm_customer_reminder
+        <set>
+            <if test="reminder.status != null">status = #{reminder.status},</if>
+            <if test="reminder.updateUser != null">updated_by = #{reminder.updateUser},</if>
+            updated_time = NOW()
+        </set>
+        WHERE id = #{reminder.id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM crm_customer_reminder WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM crm_customer_reminder WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserId" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderListResponse">
+        SELECT
+            id, customer_id as customerId, customer_name as customerName,
+            user_id as userId, user_name as userName, reminder_time as reminderTime,
+            content, status, created_time as createTime, updated_time as updateTime
+        FROM crm_customer_reminder
+        WHERE user_id = #{userId}
+        ORDER BY reminder_time DESC, created_time DESC
+    </select>
+
+    <select id="selectByCustomerId" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderListResponse">
+        SELECT
+            id, customer_id as customerId, customer_name as customerName,
+            user_id as userId, user_name as userName, reminder_time as reminderTime,
+            content, status, created_time as createTime, updated_time as updateTime
+        FROM crm_customer_reminder
+        WHERE customer_id = #{customerId}
+        ORDER BY reminder_time DESC, created_time DESC
+    </select>
+
+    <select id="selectPendingReminders" resultType="cn.cordys.crm.customer.dto.response.CustomerReminderListResponse">
+        SELECT
+            id, customer_id as customerId, customer_name as customerName,
+            user_id as userId, user_name as userName, reminder_time as reminderTime,
+            content, status, created_time as createTime, updated_time as updateTime
+        FROM crm_customer_reminder
+        WHERE status = 0 AND reminder_time &lt;= #{now}
+        ORDER BY reminder_time ASC
+    </select>
+
+    <select id="countPendingByUserId" resultType="int">
+        SELECT COUNT(*) FROM crm_customer_reminder
+        WHERE user_id = #{userId} AND status = 0
+    </select>
+
+    <select id="selectRemindersToProcess" resultMap="BaseResultMap">
+        SELECT * FROM crm_customer_reminder
+        WHERE status = 0 AND reminder_time &lt;= #{now}
+        ORDER BY reminder_time ASC
+    </select>
+
+</mapper>

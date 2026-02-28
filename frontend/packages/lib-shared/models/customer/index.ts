@@ -361,3 +361,12 @@ export interface MergeAccountParams {
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
 }
+
+export type {
+  CustomerReminderListItem,
+  CustomerReminderTableParams,
+  SaveCustomerReminderParams,
+  UpdateCustomerReminderParams,
+} from './reminder';
+
+export { CustomerReminderStatusEnum } from './reminder';
