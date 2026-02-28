@@ -232,6 +232,9 @@ export const {
   getGlobalOpenSeaCustomerList,
   getGlobalModuleCount,
   moveCustomerToPool,
+  getCustomerTag,
+  saveCustomerTag,
+  getCustomerTagList,
 } = customerApi;
 
 export const {
