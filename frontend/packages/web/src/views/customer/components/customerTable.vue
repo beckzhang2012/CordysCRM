@@ -160,7 +160,7 @@
   import customerOverviewDrawer from './customerOverviewDrawer.vue';
   import mergeAccountModal from './mergeAccountModal.vue';
 
-  import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer } from '@/api/modules';
+  import { batchDeleteCustomer, batchTransferCustomer, deleteCustomer, updateCustomer, getCustomerTagList } from '@/api/modules';
   import { baseFilterConfigList } from '@/config/clue';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import useFormCreateTable from '@/hooks/useFormCreateTable';
@@ -197,6 +197,16 @@
   const checkedRowKeys = ref<DataTableRowKey[]>([]);
   const keyword = ref('');
   const formCreateDrawerVisible = ref(false);
+  const allTags = ref<any[]>([]);
+
+  async function loadAllTags() {
+    try {
+      const res = await getCustomerTagList();
+      allTags.value = res.data || [];
+    } catch (error) {
+      console.error('加载标签列表失败:', error);
+    }
+  }
   const activeSourceId = ref('');
   const initialSourceName = ref('');
   const needInitDetail = ref(false);
@@ -658,6 +668,22 @@
       dataIndex: 'followTime',
       type: FieldTypeEnum.TIME_RANGE_PICKER,
     },
+    {
+      title: '标签',
+      dataIndex: 'tagIds',
+      type: FieldTypeEnum.SELECT,
+      selectProps: {
+        labelField: 'name',
+        keyField: 'id',
+        multiple: true,
+        clearFilterAfterSelect: false,
+        options: allTags.value.map(tag => ({
+          label: tag.name,
+          value: tag.id,
+          style: `background-color: ${tag.color}; color: #fff;`,
+        })),
+      },
+    },
     ...baseFilterConfigList,
   ]);
 
@@ -737,6 +763,7 @@
   );
 
   onMounted(() => {
+    loadAllTags();
     emit('init', {
       filterConfigList: filterConfigList.value,
       customFieldsFilterConfig: customFieldsFilterConfig.value as FilterFormItem[],

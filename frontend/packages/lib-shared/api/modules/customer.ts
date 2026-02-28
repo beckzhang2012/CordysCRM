@@ -120,6 +120,12 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  GetCustomerTagListUrl,
+  GetCustomerTagByCustomerIdUrl,
+  SaveCustomerTagUrl,
+  DeleteCustomerTagUrl,
+  UpdateCustomerTagsUrl,
+  GetCustomerIdsByTagIdUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -152,6 +158,8 @@ import type {
   CustomerOptionsItem,
   CustomerTabHidden,
   CustomerTableParams,
+  CustomerTag,
+  CustomerTagRelation,
   FollowDetailItem,
   MergeAccountParams,
   MoveToPublicPoolParams,
@@ -770,6 +778,30 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
   }
 
+  function getCustomerTagList() {
+    return CDR.get({ url: GetCustomerTagListUrl });
+  }
+
+  function getCustomerTagByCustomerId(customerId: string) {
+    return CDR.get({ url: `${GetCustomerTagByCustomerIdUrl}/${customerId}` });
+  }
+
+  function saveCustomerTag(data: { name: string; color?: string }) {
+    return CDR.post({ url: SaveCustomerTagUrl, data });
+  }
+
+  function deleteCustomerTag(tagId: string) {
+    return CDR.get({ url: `${DeleteCustomerTagUrl}/${tagId}` });
+  }
+
+  function updateCustomerTags(data: { customerId: string; tagIds: string[] }) {
+    return CDR.post({ url: UpdateCustomerTagsUrl, data });
+  }
+
+  function getCustomerIdsByTagId(tagId: string) {
+    return CDR.get({ url: `${GetCustomerIdsByTagIdUrl}/${tagId}` });
+  }
+
   return {
     addCustomer,
     updateCustomer,
@@ -888,8 +920,14 @@ export default function useProductApi(CDR: CordysAxios) {
     generateCustomerPoolChart,
     generateCustomerContactChart,
     getAccountContract,
-    getAccountContractStatistic,
-    getAccountPayment,
-    getAccountPaymentStatistic,
+  getAccountContractStatistic,
+  getAccountPayment,
+  getAccountPaymentStatistic,
+  getCustomerTagList,
+  getCustomerTagByCustomerId,
+  saveCustomerTag,
+  deleteCustomerTag,
+  updateCustomerTags,
+  getCustomerIdsByTagId,
   };
 }

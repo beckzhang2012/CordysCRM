@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cordys.crm.customer.mapper.CustomerTagMapper">
+
+    <select id="selectByCustomerId" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT t.*
+        FROM customer_tag t
+        INNER JOIN customer_tag_relation r ON t.id = r.tag_id
+        WHERE r.customer_id = #{customerId}
+          AND t.organization_id = r.organization_id
+        ORDER BY t.update_time DESC
+    </select>
+
+    <select id="selectByOrganizationId" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT *
+        FROM customer_tag
+        WHERE organization_id = #{organizationId}
+        ORDER BY usage_count DESC, update_time DESC
+    </select>
+
+    <select id="selectByName" resultType="cn.cordys.crm.customer.domain.CustomerTag">
+        SELECT *
+        FROM customer_tag
+        WHERE name = #{name}
+          AND organization_id = #{organizationId}
+        LIMIT 1
+    </select>
+
+    <update id="incrementUsageCount">
+        UPDATE customer_tag
+        SET usage_count = usage_count + 1,
+            update_time = UNIX_TIMESTAMP() * 1000
+        WHERE id = #{tagId}
+    </update>
+
+</mapper>
