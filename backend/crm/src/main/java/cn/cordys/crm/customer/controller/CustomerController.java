@@ -190,6 +190,16 @@ public class CustomerController {
         return customerExportService.export(SessionUtils.getUserId(), request, OrganizationContext.getOrganizationId(), deptDataPermission, LocaleContextHolder.getLocale());
     }
 
+    @PostMapping("/export-all-async")
+    @Operation(summary = "客户导出全部（异步队列）")
+    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_EXPORT)
+    public String exportAllAsync(@Validated @RequestBody CustomerExportRequest request) {
+        ConditionFilterUtils.parseCondition(request);
+        DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
+                OrganizationContext.getOrganizationId(), request.getViewId(), PermissionConstants.CUSTOMER_MANAGEMENT_READ);
+        return customerExportService.exportWithQueue(SessionUtils.getUserId(), request, OrganizationContext.getOrganizationId(), deptDataPermission, LocaleContextHolder.getLocale());
+    }
+
     @PostMapping("/export-select")
     @Operation(summary = "导出选中客户")
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_EXPORT)

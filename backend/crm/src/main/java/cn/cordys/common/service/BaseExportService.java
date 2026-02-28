@@ -49,9 +49,20 @@ import java.util.stream.Collectors;
 public abstract class BaseExportService {
 
     /**
-     * 最大查询数量
+     * 最大查询数量 - 优化后减小批次大小以避免内存溢出
      */
-    public static final int EXPORT_MAX_COUNT = 2000;
+    public static final int EXPORT_MAX_COUNT = 500;
+    
+    /**
+     * 流式处理批次大小 - 用于大数据量导出
+     */
+    public static final int STREAM_BATCH_SIZE = 100;
+    
+    /**
+     * 内存使用阈值（MB）- 超过此值将触发GC
+     */
+    private static final long MEMORY_THRESHOLD_MB = 500;
+    
     private static final String SUM_PREFIX = "sum_";
     public static final String SLASH = "/";
     @Resource
@@ -97,10 +108,71 @@ public abstract class BaseExportService {
                     break;
                 }
                 current++;
+                
+                checkMemoryUsage();
             }
         }
+    }
 
+    /**
+     * 优化的流式处理方法 - 支持更细粒度的分批处理和内存监控
+     *
+     * @param fileId   文件ID
+     * @param headList 表头信息
+     * @param task     导出任务
+     * @param fileName 文件名
+     * @param t        请求参数
+     * @param func     获取数据方法
+     * @param <T>      参数类型
+     *
+     * @throws InterruptedException 异常信息
+     */
+    public <T extends BasePageRequest> void streamHandleData(String fileId, List<List<String>> headList, ExportTask task, String fileName, T t, CustomFunction<T, List<?>> func) throws InterruptedException {
+        File file = prepareExportFile(fileId, fileName, task.getOrganizationId());
 
+        try (ExcelWriter writer = EasyExcel.write(file)
+                .head(headList)
+                .excelType(ExcelTypeEnum.XLSX)
+                .build()) {
+
+            WriteSheet sheet = EasyExcel.writerSheet("导出数据").build();
+
+            int current = 1;
+            t.setPageSize(STREAM_BATCH_SIZE);
+
+            while (true) {
+                if (ExportThreadRegistry.isInterrupted(task.getId())) {
+                    throw new InterruptedException("线程已被中断，主动退出");
+                }
+
+                t.setCurrent(current);
+                List<?> data = func.apply(t);
+                if (CollectionUtils.isEmpty(data)) {
+                    break;
+                }
+                writer.write(data, sheet);
+                if (data.size() < STREAM_BATCH_SIZE) {
+                    break;
+                }
+                current++;
+                
+                checkMemoryUsage();
+            }
+        }
+    }
+
+    /**
+     * 检查内存使用情况，如果超过阈值则触发GC
+     */
+    private void checkMemoryUsage() {
+        Runtime runtime = Runtime.getRuntime();
+        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+        long usedMemoryMB = usedMemory / (1024 * 1024);
+        
+        if (usedMemoryMB > MEMORY_THRESHOLD_MB) {
+            LogUtils.warn("Memory usage exceeds threshold: " + usedMemoryMB + "MB, triggering GC");
+            System.gc();
+        }
     }
 
     /**
@@ -155,6 +227,8 @@ public abstract class BaseExportService {
                 // 下一页&&记录偏移量
                 current++;
                 offset += mergeResult.getDataList().size();
+                
+                checkMemoryUsage();
             }
         }
     }
