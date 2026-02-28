@@ -32,4 +32,7 @@ public class BasePageRequest extends BaseCondition {
     @Valid
     @Schema(description = "排序字段")
     private SortRequest sort;
+
+    @Schema(description = "组织ID")
+    private String organizationId;
 }

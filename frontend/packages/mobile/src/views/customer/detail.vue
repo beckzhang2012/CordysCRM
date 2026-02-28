@@ -40,6 +40,12 @@
           :readonly="!hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE']) || collaborationType === 'READ_ONLY'"
         />
         <collaborator v-else-if="tab.name === 'collaborator'" ref="collaboratorListRef" :source-id="sourceId" />
+        <tags
+          v-else-if="tab.name === 'tags'"
+          ref="tagsListRef"
+          :customer-id="sourceId"
+          :editable="hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE']) && collaborationType !== 'READ_ONLY'"
+        />
         <CrmHeaderList v-else :source-id="sourceId" :load-list-api="getCustomerHeaderList" />
       </van-tab>
     </van-tabs>
@@ -76,6 +82,7 @@
   import CrmHeaderList from '@/components/business/crm-header-list/index.vue';
   import collaborator from './components/collaborator.vue';
   import relation from './components/relation.vue';
+  import tags from './components/tags.vue';
 
   import { deleteCustomer, getCustomerHeaderList } from '@/api/modules';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
@@ -127,6 +134,10 @@
       {
         name: 'collaborator',
         title: t('customer.collaborator'),
+      },
+      {
+        name: 'tags',
+        title: t('customer.tags.title'),
       },
     ];
     if (collaborationType.value) {
@@ -234,6 +245,7 @@
   const planListRef = ref<InstanceType<typeof CrmFollowPlanList>[]>();
   const relationListRef = ref<InstanceType<typeof relation>[]>();
   const collaboratorListRef = ref<InstanceType<typeof collaborator>[]>();
+  const tagsListRef = ref<InstanceType<typeof tags>[]>();
 
   onBeforeMount(async () => {
     await initFormConfig();
