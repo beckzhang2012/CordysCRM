@@ -25,7 +25,7 @@
           </div>
           <div class="mb-[24px] flex w-full flex-col gap-[16px]">
             <div class="crm-follow-record-title h-[32px]">
-              {{ dayjs(item.createTime).format('YYYY-MM-DD') }}
+              {{ item.createTime ? dayjs(item.createTime).format('YYYY-MM-DD') : '-' }}
             </div>
 
             <div class="crm-follow-record-base-info">
@@ -50,12 +50,12 @@
                 </template>
                 <template #createTime="{ item: decItem }">
                   <div class="flex items-center gap-[8px]">
-                    {{ dayjs(decItem.value).format('YYYY-MM-DD HH:mm:ss') }}
+                    {{ decItem.value ? dayjs(decItem.value).format('YYYY-MM-DD HH:mm:ss') : '-' }}
                   </div>
                 </template>
                 <template #planEndTime="{ item: decItem }">
                   <div class="flex items-center gap-[8px]">
-                    {{ dayjs(decItem.value).format('YYYY-MM-DD HH:mm:ss') }}
+                    {{ decItem.value ? dayjs(decItem.value).format('YYYY-MM-DD HH:mm:ss') : '-' }}
                   </div>
                 </template>
               </CrmDetailCard>

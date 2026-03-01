@@ -222,9 +222,7 @@
     (row: AnnouncementItemDetail) => {
       return {
         ...row,
-        startTime: `${dayjs(row.startTime).format('YYYY-MM-DD HH:mm:ss')} ${t('common.to')} ${dayjs(row.endTime).format(
-          'YYYY-MM-DD HH:mm:ss'
-        )}`,
+        startTime: `${row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm:ss') : '-'} ${t('common.to')} ${row.endTime ? dayjs(row.endTime).format('YYYY-MM-DD HH:mm:ss') : '-'}`,
         receiver: [...(row.deptIdName || []), ...(row.userIdName || [])],
       };
     }

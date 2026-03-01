@@ -134,8 +134,12 @@ public class AnnouncementService {
         List<String> receiverName = getReceiverName(oldReceiveTypeDTO);
         oldLogDTO.setReceiver(receiverName);
         oldLogDTO.setContent(new String(originalAnnouncement.getContent(), StandardCharsets.UTF_8));
-        oldLogDTO.setStartTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(originalAnnouncement.getStartTime()));
-        oldLogDTO.setEndTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(originalAnnouncement.getEndTime()));
+        if (originalAnnouncement.getStartTime() != null) {
+            oldLogDTO.setStartTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(originalAnnouncement.getStartTime()));
+        }
+        if (originalAnnouncement.getEndTime() != null) {
+            oldLogDTO.setEndTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(originalAnnouncement.getEndTime()));
+        }
         return oldLogDTO;
     }
 

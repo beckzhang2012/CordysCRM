@@ -19,7 +19,7 @@
       >
         <CrmDescription :description="getDescriptions(listItem)">
           <template #createTime="{ item }">
-            {{ dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+            {{ item.createTime ? dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
           </template>
           <template #render="{ item }">
             <div v-if="typeof item.render === 'function'">

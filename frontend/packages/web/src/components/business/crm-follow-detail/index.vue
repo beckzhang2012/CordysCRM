@@ -74,12 +74,12 @@
         </template>
         <template #createTime="{ descItem }">
           <div class="flex items-center gap-[8px]">
-            {{ dayjs(descItem.value).format('YYYY-MM-DD HH:mm:ss') }}
+            {{ descItem.value ? dayjs(descItem.value).format('YYYY-MM-DD HH:mm:ss') : '-' }}
           </div>
         </template>
         <template #updateTime="{ descItem }">
           <div class="flex items-center gap-[8px]">
-            {{ dayjs(descItem.value).format('YYYY-MM-DD HH:mm:ss') }}
+            {{ descItem.value ? dayjs(descItem.value).format('YYYY-MM-DD HH:mm:ss') : '-' }}
           </div>
         </template>
       </FollowRecord>
