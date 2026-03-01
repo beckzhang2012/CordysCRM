@@ -1,5 +1,6 @@
 <template>
   <div class="page">
+    <CrmReminderNotification />
     <router-view v-slot="{ Component, route }">
       <!-- transition内必须有且只有一个根元素，不然会导致二级路由的组件无法渲染 -->
       <div class="page-content">
@@ -47,8 +48,10 @@
   import { listenerRouteChange } from '@lib/shared/method/route-listener';
 
   import CrmIcon from '@/components/pure/crm-icon-font/index.vue';
+  import CrmReminderNotification from '@/components/business/crm-reminder-notification/index.vue';
 
   import useAppStore from '@/store/modules/app';
+  import useReminderStore from '@/store/modules/reminder';
   import { hasAnyPermission } from '@/utils/permission';
 
   import { AppRouteEnum } from '@/enums/routeEnum';
@@ -56,6 +59,7 @@
   const { t } = useI18n();
   const router = useRouter();
   const appStore = useAppStore();
+  const reminderStore = useReminderStore();
 
   function isIOS(): boolean {
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -153,6 +157,7 @@
 
   onBeforeMount(() => {
     appStore.showSQLBot();
+    reminderStore.initReminders();
   });
 
   watch(

@@ -56,6 +56,11 @@
         @select="handleMoreSelect"
       />
     </template>
+    <CrmReminderDialog
+      v-model:show="showReminderDialog"
+      :customer-id="sourceId"
+      :customer-name="sourceName"
+    />
   </CrmPageWrapper>
 </template>
 
@@ -74,6 +79,7 @@
   import CrmFollowPlanList from '@/components/business/crm-follow-list/followPlan.vue';
   import CrmFollowRecordList from '@/components/business/crm-follow-list/followRecord.vue';
   import CrmHeaderList from '@/components/business/crm-header-list/index.vue';
+  import CrmReminderDialog from '@/components/business/crm-reminder-dialog/index.vue';
   import collaborator from './components/collaborator.vue';
   import relation from './components/relation.vue';
 
@@ -98,6 +104,7 @@
   });
 
   const activeTab = ref('info');
+  const showReminderDialog = ref(false);
   const tabList = computed(() => {
     const fullTabList = [
       {
@@ -136,6 +143,11 @@
   });
 
   const actions = ref<CrmActionButtonsItem[]>([
+    {
+      key: 'setReminder',
+      text: t('reminder.setReminder'),
+      permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
+    },
     {
       key: 'moveToPool',
       text: t('customer.moveToOpenSea'),
@@ -224,6 +236,9 @@
         break;
       case 'moveToPool':
         handleMoveToPool();
+        break;
+      case 'setReminder':
+        showReminderDialog.value = true;
         break;
       default:
         break;
