@@ -347,4 +347,12 @@ export default {
   'common.approvedSuccess': '审批通过',
   'common.unApprovedSuccess': '审批不通过',
   'common.skipped': '跳过',
+  'common.setReminder': '设置提醒',
+  'common.reminderTime': '提醒时间',
+  'common.reminderContent': '提醒内容',
+  'common.reminderList': '提醒列表',
+  'common.noReminder': '暂无提醒',
+  'common.reminderSetSuccess': '提醒设置成功',
+  'common.reminderDeleteSuccess': '提醒删除成功',
+  'common.reminderNotification': '客户跟进提醒',
 };

@@ -46,7 +46,9 @@
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
   import type { ActionsItem } from './type';
-  import { Size } from 'naive-ui/es/button/src/interface';
+  import type { ButtonProps } from 'naive-ui';
+
+  type Size = ButtonProps['size'];
 
   const slots = useSlots();
   const props = withDefaults(

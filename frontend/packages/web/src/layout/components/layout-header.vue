@@ -43,10 +43,60 @@
           </template>
           <template #alertsSlot>
             <n-button class="p-[8px]" quaternary @click="showMessage">
-              <n-badge value="1" dot :show="showBadge">
+              <n-badge :value="totalUnreadCount" :show="showBadge || hasUnreadReminders">
                 <CrmIcon type="iconicon-alarmclock" :size="16" />
               </n-badge>
             </n-button>
+          </template>
+          <template #reminderSlot>
+            <n-popover trigger="click" placement="bottom-end" :show-arrow="false" content-class="!p-0 !w-[360px]">
+              <n-button class="p-[8px]" quaternary>
+                <n-badge :value="unreadReminderCount" :show="hasUnreadReminders">
+                  <CrmIcon type="iconicon_notification" :size="16" />
+                </n-badge>
+              </n-button>
+              <template #trigger>
+                <div class="p-[16px]">
+                  <div class="mb-[16px] flex items-center justify-between">
+                    <div class="text-[16px] font-semibold">{{ t('common.reminderList') }}</div>
+                    <n-button text type="primary" size="small" @click="clearAllReminders">
+                      {{ t('common.clearAll') }}
+                    </n-button>
+                  </div>
+                  <div v-if="reminderList.length === 0" class="py-[32px] text-center text-[var(--text-n4)]">
+                    {{ t('common.noReminder') }}
+                  </div>
+                  <div v-else class="max-h-[400px] overflow-y-auto">
+                    <div
+                      v-for="reminder in reminderList"
+                      :key="reminder.id"
+                      class="mb-[8px] cursor-pointer rounded bg-[var(--text-n9)] p-[12px] hover:bg-[var(--text-n8)]"
+                      :class="{ 'opacity-60': reminder.isRead }"
+                      @click="markReminderAsRead(reminder.id)"
+                    >
+                      <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                          <div class="mb-[4px] text-[14px] font-medium">{{ reminder.customerName }}</div>
+                          <div class="mb-[8px] text-[12px] text-[var(--text-n4)]">
+                            {{ formatReminderTime(reminder.reminderTime) }}
+                          </div>
+                          <div class="text-[13px] text-[var(--text-n2)]">{{ reminder.reminderContent }}</div>
+                        </div>
+                        <n-button
+                          text
+                          type="error"
+                          size="small"
+                          class="flex-shrink-0"
+                          @click.stop="deleteReminder(reminder.id)"
+                        >
+                          {{ t('common.delete') }}
+                        </n-button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </n-popover>
           </template>
           <template #agentSlot>
             <n-button class="p-[8px]" quaternary @click="showAgent">
@@ -171,6 +221,7 @@
   import { useClipboard } from '@vueuse/core';
   import { NBadge, NButton, NDivider, NLayoutHeader, NPopover, NPopselect, useMessage } from 'naive-ui';
   import { LanguageOutline } from '@vicons/ionicons5';
+  import dayjs from 'dayjs';
 
   import { useI18n } from '@lib/shared/hooks/useI18n';
   import { LOCALE_OPTIONS } from '@lib/shared/locale';
@@ -198,6 +249,16 @@
   import { hasAnyPermission } from '@/utils/permission';
 
   import { WorkbenchRouteEnum } from '@/enums/routeEnum';
+
+  interface Reminder {
+    id: string;
+    customerId: string;
+    customerName: string;
+    reminderTime: number;
+    reminderContent: string;
+    isRead: boolean;
+    createTime: number;
+  }
 
   const agentDrawer = defineAsyncComponent(() => import('@/components/business/crm-agent-drawer/index.vue'));
   const CrmFollowDrawer = defineAsyncComponent(() => import('@/components/business/crm-follow-drawer/index.vue'));
@@ -227,6 +288,71 @@
   const showBadge = computed(() => {
     return !appStore.messageInfo.read;
   });
+
+  // 提醒相关逻辑
+  const reminderList = ref<Reminder[]>([]);
+  const reminderTimer = ref<number | null>(null);
+
+  function loadReminders() {
+    const reminders = JSON.parse(localStorage.getItem('customerReminders') || '[]');
+    reminderList.value = reminders.sort((a: Reminder, b: Reminder) => b.reminderTime - a.reminderTime);
+  }
+
+  const unreadReminderCount = computed(() => {
+    return reminderList.value.filter((r) => !r.isRead && r.reminderTime <= Date.now()).length;
+  });
+
+  const hasUnreadReminders = computed(() => {
+    return unreadReminderCount.value > 0;
+  });
+
+  const totalUnreadCount = computed(() => {
+    const messageCount = showBadge.value ? 1 : 0;
+    return messageCount + unreadReminderCount.value;
+  });
+
+  function formatReminderTime(timestamp: number) {
+    return dayjs(timestamp).format('YYYY-MM-DD HH:mm');
+  }
+
+  function markReminderAsRead(id: string) {
+    const reminders = JSON.parse(localStorage.getItem('customerReminders') || '[]');
+    const index = reminders.findIndex((r: Reminder) => r.id === id);
+    if (index !== -1) {
+      reminders[index].isRead = true;
+      localStorage.setItem('customerReminders', JSON.stringify(reminders));
+      loadReminders();
+    }
+  }
+
+  function deleteReminder(id: string) {
+    const reminders = JSON.parse(localStorage.getItem('customerReminders') || '[]');
+    const filtered = reminders.filter((r: Reminder) => r.id !== id);
+    localStorage.setItem('customerReminders', JSON.stringify(filtered));
+    loadReminders();
+    Message.success(t('common.reminderDeleteSuccess'));
+  }
+
+  function clearAllReminders() {
+    localStorage.removeItem('customerReminders');
+    loadReminders();
+    Message.success(t('common.reminderDeleteSuccess'));
+  }
+
+  // 检查是否有需要提醒的通知
+  function checkReminders() {
+    const now = Date.now();
+    const reminders = JSON.parse(localStorage.getItem('customerReminders') || '[]');
+    const dueReminders = reminders.filter(
+      (r: Reminder) => !r.isRead && r.reminderTime <= now && r.reminderTime > now - 60000
+    );
+
+    if (dueReminders.length > 0) {
+      dueReminders.forEach((reminder: Reminder) => {
+        Message.info(`${t('common.reminderNotification')}: ${reminder.customerName} - ${reminder.reminderContent}`);
+      });
+    }
+  }
 
   const showMessageDrawer = ref(false);
   function showMessage() {
@@ -351,6 +477,25 @@
     appStore.connectSystemMessageSSE(userStore.showSystemNotify);
     appStore.showSQLBot();
     userStore.initApiKeyList();
+
+    // 初始化提醒
+    loadReminders();
+    checkReminders();
+    // 每分钟检查一次提醒
+    reminderTimer.value = window.setInterval(() => {
+      loadReminders();
+      checkReminders();
+    }, 60000);
+
+    // 监听新提醒事件
+    window.addEventListener('newReminder', loadReminders);
+  });
+
+  onBeforeUnmount(() => {
+    if (reminderTimer.value) {
+      clearInterval(reminderTimer.value);
+    }
+    window.removeEventListener('newReminder', loadReminders);
   });
 
   const innerLogo = computed(() =>

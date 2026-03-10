@@ -337,4 +337,12 @@ export default {
   'common.approvedSuccess': 'Approval passed',
   'common.unApprovedSuccess': 'Approval not passed',
   'common.skipped': 'Skipped',
+  'common.setReminder': 'Set Reminder',
+  'common.reminderTime': 'Reminder Time',
+  'common.reminderContent': 'Reminder Content',
+  'common.reminderList': 'Reminder List',
+  'common.noReminder': 'No Reminder',
+  'common.reminderSetSuccess': 'Reminder set successfully',
+  'common.reminderDeleteSuccess': 'Reminder deleted successfully',
+  'common.reminderNotification': 'Customer Follow-up Reminder',
 };
