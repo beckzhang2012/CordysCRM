@@ -105,6 +105,12 @@
         type="warning"
         @refresh="refresh"
       />
+      <ReminderModal
+        v-model:show="showReminderModal"
+        :customer-id="props.sourceId"
+        :customer-name="sourceName"
+        @success="handleReminderSuccess"
+      />
     </template>
   </CrmOverviewDrawer>
 </template>
@@ -128,6 +134,7 @@
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
   import collaborator from './collaborator.vue';
   import customerRelation from './customerRelation.vue';
+  import ReminderModal from './reminderModal.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
 
@@ -205,6 +212,14 @@
         danger: true,
         class: 'n-btn-outline-primary',
         permission: ['CUSTOMER_MANAGEMENT:DELETE'],
+      },
+      {
+        label: t('common.setReminder'),
+        key: 'setReminder',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+        permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
       },
     ];
   });
@@ -320,6 +335,12 @@
     showMoveModal.value = true;
   }
 
+  // 设置提醒
+  const showReminderModal = ref(false);
+  function handleReminderSuccess() {
+    Message.success(t('common.reminderSetSuccess'));
+  }
+
   function handleButtonSelect(key: string) {
     if (key === 'delete') {
       handleDelete();
@@ -327,6 +348,8 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      showReminderModal.value = true;
     }
   }
 
