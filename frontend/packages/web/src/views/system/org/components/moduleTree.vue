@@ -343,20 +343,21 @@
    */
   async function handleDelete(option: CrmTreeNodeData) {
     const offspringIds = [option.id, ...getSpringIds((option as CrmTreeNodeData).children)];
-    const isNotAllow = await checkDeleteDepartment(offspringIds);
+    // canDelete: true 表示可以删除，false 表示部门下有员工不能删除
+    const canDelete = await checkDeleteDepartment(offspringIds);
     openModal({
       type: 'error',
       title: t('common.deleteConfirmTitle', { name: characterLimit(option.name) }),
-      content: !isNotAllow ? t('org.deleteExistUserDepartment') : t('org.deleteDepartmentContent'),
-      positiveText: !isNotAllow ? t('org.ok') : t('common.confirm'),
-      negativeText: !isNotAllow ? '' : t('common.cancel'),
+      content: !canDelete ? t('org.deleteExistUserDepartment') : t('org.deleteDepartmentContent'),
+      positiveText: !canDelete ? t('org.ok') : t('common.confirm'),
+      negativeText: !canDelete ? '' : t('common.cancel'),
       positiveButtonProps: {
-        type: !isNotAllow ? 'primary' : 'error',
+        type: !canDelete ? 'primary' : 'error',
         size: 'medium',
       },
       onPositiveClick: async () => {
         try {
-          if (isNotAllow) {
+          if (canDelete) {
             await deleteDepartment(offspringIds);
             Message.success(t('common.deleteSuccess'));
             initTree(true);
@@ -364,6 +365,8 @@
         } catch (error) {
           // eslint-disable-next-line no-console
           console.log(error);
+          // 后端会在校验失败时抛出异常，这里确保错误消息被显示
+          Message.error(error instanceof Error ? error.message : t('common.deleteFailed'));
         }
       },
     });
