@@ -120,6 +120,12 @@ import {
   GetAccountContractStatisticUrl,
   GetAccountPaymentListUrl,
   GetAccountPaymentStatisticUrl,
+  AddCustomerReminderUrl,
+  UpdateCustomerReminderUrl,
+  DeleteCustomerReminderUrl,
+  DismissCustomerReminderUrl,
+  GetCustomerReminderListByCustomerUrl,
+  GetCustomerReminderPageUrl,
 } from '@lib/shared/api/requrls/customer';
 import type {
   ChartResponseDataItem,
@@ -150,6 +156,10 @@ import type {
   CustomerOpenSeaListItem,
   CustomerOpportunityTableParams,
   CustomerOptionsItem,
+  CustomerReminderAddParams,
+  CustomerReminderListItem,
+  CustomerReminderTableParams,
+  CustomerReminderUpdateParams,
   CustomerTabHidden,
   CustomerTableParams,
   FollowDetailItem,
@@ -762,12 +772,37 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get({ url: `${GetAccountContractStatisticUrl}/${id}` });
   }
 
-    function getAccountPayment(data: TableQueryParams) {
+  function getAccountPayment(data: TableQueryParams) {
     return CDR.post<CommonList<ContractItem>>({ url: GetAccountPaymentListUrl, data });
   }
 
   function getAccountPaymentStatistic(id: string) {
     return CDR.get({ url: `${GetAccountPaymentStatisticUrl}/${id}` });
+  }
+
+  // 客户提醒
+  function addCustomerReminder(data: CustomerReminderAddParams) {
+    return CDR.post<CustomerReminderListItem>({ url: AddCustomerReminderUrl, data });
+  }
+
+  function updateCustomerReminder(data: CustomerReminderUpdateParams) {
+    return CDR.post<CustomerReminderListItem>({ url: UpdateCustomerReminderUrl, data });
+  }
+
+  function deleteCustomerReminder(id: string) {
+    return CDR.get({ url: `${DeleteCustomerReminderUrl}/${id}` });
+  }
+
+  function dismissCustomerReminder(id: string) {
+    return CDR.get({ url: `${DismissCustomerReminderUrl}/${id}` });
+  }
+
+  function getCustomerReminderListByCustomer(customerId: string) {
+    return CDR.get<CustomerReminderListItem[]>({ url: `${GetCustomerReminderListByCustomerUrl}/${customerId}` });
+  }
+
+  function getCustomerReminderPage(data: CustomerReminderTableParams) {
+    return CDR.post<CommonList<CustomerReminderListItem>>({ url: GetCustomerReminderPageUrl, data });
   }
 
   return {
@@ -891,5 +926,11 @@ export default function useProductApi(CDR: CordysAxios) {
     getAccountContractStatistic,
     getAccountPayment,
     getAccountPaymentStatistic,
+    addCustomerReminder,
+    updateCustomerReminder,
+    deleteCustomerReminder,
+    dismissCustomerReminder,
+    getCustomerReminderListByCustomer,
+    getCustomerReminderPage,
   };
 }

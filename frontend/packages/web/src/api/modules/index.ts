@@ -373,6 +373,13 @@ export const {
   getAccountContractStatistic,
   getAccountPayment,
   getAccountPaymentStatistic,
+  // 客户提醒
+  addCustomerReminder,
+  updateCustomerReminder,
+  deleteCustomerReminder,
+  dismissCustomerReminder,
+  getCustomerReminderListByCustomer,
+  getCustomerReminderPage,
 } = customerApi;
 
 export const {

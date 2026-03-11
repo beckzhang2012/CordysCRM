@@ -96,6 +96,23 @@
           :form-key="FormDesignKeyEnum.CONTRACT_PAYMENT"
           :source-id="props.sourceId"
         />
+        <div v-else-if="activeTab === 'reminder'" class="p-[16px_24px]">
+          <div class="flex items-center justify-between mb-[16px]">
+            <n-button
+              type="primary"
+              @click="openReminderDialog()"
+              :disabled="collaborationType === 'READ_ONLY' || !hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE']) || props.readonly"
+            >
+              {{ t('customer.addReminder') }}
+            </n-button>
+          </div>
+          <customerReminderList
+            :customer-id="props.sourceId"
+            :readonly="collaborationType === 'READ_ONLY' || props.readonly"
+            @edit="openReminderDialog"
+            @refresh="refreshReminderList"
+          />
+        </div>
       </div>
       <CrmMoveModal
         v-model:show="showMoveModal"
@@ -105,17 +122,23 @@
         type="warning"
         @refresh="refresh"
       />
+      <customerReminderDialog
+        v-model:show="showReminderDialog"
+        :customer-id="props.sourceId"
+        :reminder="editingReminder"
+        @saved="handleReminderSaved"
+      />
     </template>
   </CrmOverviewDrawer>
 </template>
 
 <script setup lang="ts">
-  import { useMessage } from 'naive-ui';
+  import { NButton, useMessage } from 'naive-ui';
 
   import { FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
   import { ModuleConfigEnum, ReasonTypeEnum } from '@lib/shared/enums/moduleEnum';
   import { useI18n } from '@lib/shared/hooks/useI18n';
-  import { CollaborationType } from '@lib/shared/models/customer';
+  import { CollaborationType, CustomerReminderListItem } from '@lib/shared/models/customer';
 
   import CrmCard from '@/components/pure/crm-card/index.vue';
   import type { ActionsItem } from '@/components/pure/crm-more-action/type';
@@ -130,6 +153,8 @@
   import customerRelation from './customerRelation.vue';
   import ContractTimeline from '@/views/contract/contract/components/contractTimeline.vue';
   import opportunityTable from '@/views/opportunity/components/opportunityTable.vue';
+  import customerReminderDialog from './customerReminderDialog.vue';
+  const customerReminderList = defineAsyncComponent(() => import('./customerReminderList.vue'));
 
   import { deleteCustomer, getCustomerHeaderList, updateCustomer } from '@/api/modules';
   import useModal from '@/hooks/useModal';
@@ -157,10 +182,13 @@
   const layout = computed(() => crmOverviewDrawerRef.value?.layout);
 
   const refreshKey = ref(0);
+  const reminderListRefreshKey = ref(0);
   const transferLoading = ref(false);
   const collaborationType = ref<CollaborationType>();
   const sourceName = ref('');
   const descriptionRef = ref<InstanceType<typeof CrmFormDescription>>();
+  const showReminderDialog = ref(false);
+  const editingReminder = ref<CustomerReminderListItem | null>(null);
   const buttonList = computed<ActionsItem[]>(() => {
     if (collaborationType.value || props.readonly) {
       return [];
@@ -169,6 +197,14 @@
       {
         label: t('common.edit'),
         key: 'edit',
+        text: false,
+        ghost: true,
+        class: 'n-btn-outline-primary',
+        permission: ['CUSTOMER_MANAGEMENT:UPDATE'],
+      },
+      {
+        label: t('customer.setReminder'),
+        key: 'setReminder',
         text: false,
         ghost: true,
         class: 'n-btn-outline-primary',
@@ -260,6 +296,11 @@
         enable: true,
         permission: ['CONTRACT_PAYMENT_PLAN:READ'],
       },
+      {
+        name: 'reminder',
+        tab: t('customer.reminder'),
+        enable: true,
+      },
     ];
     if (collaborationType.value) {
       return fullList.filter((item) => item.name !== 'collaborator');
@@ -327,7 +368,23 @@
       transfer();
     } else if (key === 'moveToOpenSea') {
       handleMoveToPublicPool();
+    } else if (key === 'setReminder') {
+      openReminderDialog();
     }
+  }
+
+  function openReminderDialog(reminder?: CustomerReminderListItem) {
+    editingReminder.value = reminder || null;
+    showReminderDialog.value = true;
+  }
+
+  function handleReminderSaved() {
+    refreshReminderList();
+    Message.success(t('common.saveSuccess'));
+  }
+
+  function refreshReminderList() {
+    reminderListRefreshKey.value += 1;
   }
 
   function handleSaved() {

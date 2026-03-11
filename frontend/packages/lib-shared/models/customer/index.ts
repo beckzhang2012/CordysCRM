@@ -361,3 +361,36 @@ export interface MergeAccountParams {
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
 }
+
+// 客户提醒相关类型
+export interface CustomerReminderAddParams {
+  customerId: string;
+  content: string;
+  remindTime: number;
+  owner?: string;
+}
+
+export interface CustomerReminderUpdateParams {
+  id: string;
+  content?: string;
+  remindTime?: number;
+  owner?: string;
+}
+
+export interface CustomerReminderListItem {
+  id: string;
+  customerId: string;
+  customerName: string;
+  content: string;
+  remindTime: number;
+  owner: string;
+  ownerName: string;
+  status: string;
+  createTime: number;
+  createUser: string;
+  createUserName: string;
+}
+
+export interface CustomerReminderTableParams extends TableQueryParams {
+  status?: string;
+}
