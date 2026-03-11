@@ -121,6 +121,9 @@ public class NotificationConstants {
 
         @Schema(description = "message.contract_payment_plan_delete")
         String CONTRACT_PAYMENT_PLAN_DELETE = "CONTRACT_PAYMENT_PLAN_DELETE";
+
+        @Schema(description = "message.customer_reminder")
+        String CUSTOMER_REMINDER = "CUSTOMER_REMINDER";
     }
 
     public interface RelatedUser {
@@ -223,6 +226,9 @@ public class NotificationConstants {
         //${OPERATOR}删除了${name}报价单
         @Schema(description = "message.business_quotation_deleted_text")
         String BUSINESS_QUOTATION_DELETED_TEXT = "BUSINESS_QUOTATION_DELETED_TEXT";
+
+        @Schema(description = "message.customer_reminder_text")
+        String CUSTOMER_REMINDER_TEXT = "CUSTOMER_REMINDER_TEXT";
     }
 
 

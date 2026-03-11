@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.customer.mapper.ExtCustomerReminderMapper">
+
+    <select id="selectPendingReminders" resultType="cn.cordys.crm.customer.domain.CustomerReminder">
+        SELECT
+            id,
+            customer_id,
+            content,
+            remind_time,
+            owner,
+            status,
+            organization_id,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        FROM customer_reminder
+        WHERE status = 'PENDING'
+          AND remind_time &lt;= #{currentTime}
+    </select>
+
+    <select id="selectByCustomerId" resultType="cn.cordys.crm.customer.domain.CustomerReminder">
+        SELECT
+            id,
+            customer_id,
+            content,
+            remind_time,
+            owner,
+            status,
+            organization_id,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        FROM customer_reminder
+        WHERE customer_id = #{customerId}
+        <if test="owner != null and owner != ''">
+            AND owner = #{owner}
+        </if>
+        ORDER BY remind_time DESC
+    </select>
+
+    <select id="selectByOwner" resultType="cn.cordys.crm.customer.domain.CustomerReminder">
+        SELECT
+            id,
+            customer_id,
+            content,
+            remind_time,
+            owner,
+            status,
+            organization_id,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        FROM customer_reminder
+        WHERE owner = #{owner}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY remind_time DESC
+    </select>
+
+    <update id="batchUpdateStatus">
+        UPDATE customer_reminder
+        SET status = #{status},
+            update_time = #{updateTime},
+            update_user = #{userId}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

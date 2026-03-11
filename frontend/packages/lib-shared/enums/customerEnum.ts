@@ -15,3 +15,9 @@ export enum CustomerFollowPlanStatusEnum {
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
 }
+
+export enum CustomerReminderStatusEnum {
+  PENDING = 'PENDING',
+  TRIGGERED = 'TRIGGERED',
+  DISMISSED = 'DISMISSED',
+}
