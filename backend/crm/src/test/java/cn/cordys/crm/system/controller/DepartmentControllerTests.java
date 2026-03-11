@@ -1,5 +1,6 @@
 package cn.cordys.crm.system.controller;
 
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.crm.base.BaseTest;
 import cn.cordys.crm.system.dto.request.DepartmentAddRequest;
 import cn.cordys.crm.system.dto.request.DepartmentCommanderRequest;
@@ -16,6 +17,8 @@ import org.springframework.test.context.jdbc.SqlConfig;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -74,28 +77,46 @@ public class DepartmentControllerTests extends BaseTest {
 
     }
 
-
     @Test
     @Order(5)
-    public void departmentDeleteCHeck() throws Exception {
-        this.requestPost(DEPARTMENT_DELETE_CHECK, List.of("7"));
-    }
-
-    @Test
-    @Order(6)
-    public void departmentDelete() throws Exception {
-        this.requestPost(DEPARTMENT_DELETE, List.of("7"));
-        this.requestPost(DEPARTMENT_DELETE, List.of("8"));
-    }
-
-
-    @Test
-    @Order(4)
     public void departmentSort() throws Exception {
         NodeMoveRequest request = new NodeMoveRequest();
         request.setDropNodeId("4");
         request.setDragNodeId("1");
         request.setDropPosition(1);
         this.requestPost(DEPARTMENT_SORT, request).andExpect(status().isOk());
+    }
+
+    @Sql(scripts = {"/dml/init_department_test.sql"},
+            config = @SqlConfig(encoding = "utf-8", transactionMode = SqlConfig.TransactionMode.ISOLATED),
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    @Order(6)
+    public void testDeleteCheckWithEmployees() throws Exception {
+        // 部门8下有员工，deleteCheck应该返回false
+        this.requestPost(DEPARTMENT_DELETE_CHECK, List.of("8"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is(false)));
+
+        // 部门7下没有员工，deleteCheck应该返回true
+        this.requestPost(DEPARTMENT_DELETE_CHECK, List.of("7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is(true)));
+    }
+
+    @Sql(scripts = {"/dml/init_department_test.sql"},
+            config = @SqlConfig(encoding = "utf-8", transactionMode = SqlConfig.TransactionMode.ISOLATED),
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    @Order(7)
+    public void testDeleteDepartmentWithEmployees() throws Exception {
+        // 部门8下有员工，应该返回400错误
+        this.requestPost(DEPARTMENT_DELETE, List.of("8"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(CrmHttpResultCode.VALIDATE_FAILED.getCode())));
+
+        // 部门7下没有员工，应该成功删除
+        this.requestPost(DEPARTMENT_DELETE, List.of("7"))
+                .andExpect(status().isOk());
     }
 }

@@ -11,6 +11,7 @@ import cn.cordys.common.dto.BaseTreeNode;
 import cn.cordys.common.dto.DeptUserTreeNode;
 import cn.cordys.common.dto.NodeSortDTO;
 import cn.cordys.common.exception.GenericException;
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.BeanUtils;
 import cn.cordys.common.util.NodeSortUtils;
@@ -228,43 +229,63 @@ public class DepartmentService extends MoveNodeService {
      */
     @CacheEvict(value = "dept_tree_cache", key = "#orgId", beforeInvocation = true)
     public void delete(List<String> ids, String operator, String orgId) {
-        if (deleteCheck(ids, orgId)) {
-            List<Department> departmentList = departmentMapper.selectByIds(ids);
-            //刪除部門
-            departmentMapper.deleteByIds(ids);
-            List<LogDTO> logs = new ArrayList<>();
-            // 添加日志上下文
-            departmentList.forEach(department -> {
-                LogDTO logDTO = new LogDTO(department.getOrganizationId(), department.getId(), operator, LogType.DELETE, LogModule.SYSTEM_ORGANIZATION, department.getName());
-                logDTO.setOriginalValue(department);
-                logs.add(logDTO);
-            });
-            logService.batchAdd(logs);
-        }
+        // 执行删除前校验，校验不通过则抛出异常
+        validateDelete(ids, orgId);
+        List<Department> departmentList = departmentMapper.selectByIds(ids);
+        //刪除部門
+        departmentMapper.deleteByIds(ids);
+        List<LogDTO> logs = new ArrayList<>();
+        // 添加日志上下文
+        departmentList.forEach(department -> {
+            LogDTO logDTO = new LogDTO(department.getOrganizationId(), department.getId(), operator, LogType.DELETE, LogModule.SYSTEM_ORGANIZATION, department.getName());
+            logDTO.setOriginalValue(department);
+            logs.add(logDTO);
+        });
+        logService.batchAdd(logs);
     }
 
-
     /**
-     * 删除部门前校验
+     * 执行删除前的完整校验，校验不通过则抛出异常
      *
-     * @param ids
-     * @param orgId
-     *
-     * @return
+     * @param ids   部门ID列表
+     * @param orgId 组织ID
      */
-    public boolean deleteCheck(List<String> ids, String orgId) {
+    private void validateDelete(List<String> ids, String orgId) {
+        // 基础校验：检查是否是内置部门
         List<Department> departmentList = departmentMapper.selectByIds(ids);
         if (CollectionUtils.isNotEmpty(departmentList)) {
             departmentList.forEach(department -> {
                 if (Strings.CI.equalsAny(department.getResource(), DepartmentConstants.INTERNAL.name())
                         && Strings.CI.equalsAny(department.getParentId(), "NONE")) {
-                    throw new GenericException(Translator.get("department.internal"));
+                    throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("department.internal"));
                 }
             });
-
         }
+        // 校验：检查部门下是否有员工
+        if (extOrganizationUserMapper.countUserByDepartmentIds(ids, orgId) > 0) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("department.has.employees"));
+        }
+    }
 
-        return extOrganizationUserMapper.countUserByDepartmentIds(ids, orgId) <= 0;
+    /**
+     * 删除部门前校验 - 供前端预检查使用
+     *
+     * @param ids   部门ID列表
+     * @param orgId 组织ID
+     * @return true 表示可以删除，false 表示不能删除（有员工）
+     */
+    public boolean deleteCheck(List<String> ids, String orgId) {
+        try {
+            validateDelete(ids, orgId);
+            return true;
+        } catch (GenericException e) {
+            // 如果是因为有员工导致的校验失败，返回 false
+            // 如果是其他原因（如内置部门），继续抛出异常
+            if (Translator.get("department.has.employees").equals(e.getMessage())) {
+                return false;
+            }
+            throw e;
+        }
     }
 
 
