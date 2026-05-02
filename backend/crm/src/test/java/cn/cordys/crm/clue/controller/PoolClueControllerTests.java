@@ -116,6 +116,60 @@ public class PoolClueControllerTests extends BaseTest {
 
     @Test
     @Order(4)
+    void pageWithKeywordEdgeCases() throws Exception {
+        CluePageRequest request = new CluePageRequest();
+        request.setPoolId("test-pool-id");
+        request.setCurrent(1);
+        request.setPageSize(10);
+
+        request.setKeyword("");
+        MvcResult mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
+        Pager<List<ClueListResponse>> pageResult = getPageResult(mvcResult, ClueListResponse.class);
+        Assertions.assertEquals(3, pageResult.getTotal());
+
+        request.setKeyword("   ");
+        mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
+        pageResult = getPageResult(mvcResult, ClueListResponse.class);
+        Assertions.assertEquals(3, pageResult.getTotal());
+
+        request.setKeyword(null);
+        mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
+        pageResult = getPageResult(mvcResult, ClueListResponse.class);
+        Assertions.assertEquals(3, pageResult.getTotal());
+
+        request.setKeyword("a".repeat(255));
+        mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
+        pageResult = getPageResult(mvcResult, ClueListResponse.class);
+        Assertions.assertEquals(0, pageResult.getTotal());
+    }
+
+    @Test
+    @Order(5)
+    void pageWithKeywordAndPagination() throws Exception {
+        CluePageRequest request = new CluePageRequest();
+        request.setPoolId("test-pool-id");
+        request.setCurrent(1);
+        request.setPageSize(1);
+
+        request.setKeyword("Company");
+        MvcResult mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
+        Pager<List<ClueListResponse>> pageResult = getPageResult(mvcResult, ClueListResponse.class);
+        Assertions.assertEquals(2, pageResult.getTotal());
+        Assertions.assertEquals(1, pageResult.getList().size());
+        String firstPageId = pageResult.getList().getFirst().getId();
+
+        request.setCurrent(2);
+        mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
+        pageResult = getPageResult(mvcResult, ClueListResponse.class);
+        Assertions.assertEquals(2, pageResult.getTotal());
+        Assertions.assertEquals(1, pageResult.getList().size());
+        String secondPageId = pageResult.getList().getFirst().getId();
+
+        Assertions.assertNotEquals(firstPageId, secondPageId);
+    }
+
+    @Test
+    @Order(6)
     void pageWithKeyword() throws Exception {
         CluePageRequest request = new CluePageRequest();
         request.setPoolId("test-pool-id");
@@ -146,7 +200,7 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(5)
+    @Order(7)
     void pickFailWithOverCapacity() throws Exception {
         PoolCluePickRequest request = new PoolCluePickRequest();
         request.setClueId(testDataId);
@@ -164,7 +218,7 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(6)
+    @Order(8)
     void assignSuccess() throws Exception {
         PoolClueAssignRequest request = new PoolClueAssignRequest();
         request.setClueId(testDataId);
@@ -174,16 +228,16 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(7)
+    @Order(9)
     void getDetail() throws Exception {
         this.requestGetWithOk(GET_DETAIL + testDataId);
         requestGetPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_READ, GET_DETAIL + testDataId);
     }
 
 
-    // 因为要在删除之前测试能否导出，此时优先级和getDetail可以看作是平级的，所以都用同一个Order
+    // 导出与详情在删除前完成；顺序用连续 @Order 固定
     @Test
-    @Order(7)
+    @Order(10)
     void testExport() throws Exception {
         ClueExportRequest request = new ClueExportRequest();
         request.setCurrent(1);
@@ -212,7 +266,7 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(7)
+    @Order(11)
     void testExportSelect() throws Exception {
 
         CluePageRequest request = new CluePageRequest();
@@ -221,7 +275,7 @@ public class PoolClueControllerTests extends BaseTest {
         request.setPageSize(10);
         MvcResult mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
         Pager<List<ClueListResponse>> pageResult = getPageResult(mvcResult, ClueListResponse.class);
-        assert pageResult.getTotal() == 1;
+        Assertions.assertEquals(2, pageResult.getTotal());
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_READ, PAGE, request);
         List<ClueListResponse> customerList = pageResult.getList();
 
@@ -238,14 +292,14 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(8)
+    @Order(12)
     void deleteSuccess() throws Exception {
         this.requestGetWithOk(DELETE + testDataId);
         requestGetPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_DELETE, DELETE + testDataId);
     }
 
     @Test
-    @Order(8)
+    @Order(13)
     void batchPickFailWithOverDailyOrPreOwnerLimit() throws Exception {
         Clue clue = createClue();
         clue.setOwner("admin");
@@ -264,7 +318,7 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(10)
+    @Order(14)
     void batchAssignFailWithNotExit() throws Exception {
         PoolBatchAssignRequest request = new PoolBatchAssignRequest();
         request.setBatchIds(List.of("aaa"));
@@ -275,7 +329,7 @@ public class PoolClueControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(11)
+    @Order(15)
     void batchDeleteSuccess() throws Exception {
         this.requestPostWithOk(BATCH_DELETE, List.of(testDataId));
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_DELETE, BATCH_DELETE, List.of(testDataId));
