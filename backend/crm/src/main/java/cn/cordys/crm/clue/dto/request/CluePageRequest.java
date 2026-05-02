@@ -3,6 +3,7 @@ package cn.cordys.crm.clue.dto.request;
 import cn.cordys.common.dto.BasePageRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -13,4 +14,11 @@ import lombok.Data;
 public class CluePageRequest extends BasePageRequest {
     @Schema(description = "线索池ID{线索池-线索列表时传参}")
     private String poolId;
+
+    @Schema(description = "搜索关键字，模糊匹配客户名称和联系人电话")
+    private String keyword;
+
+    public String getKeyword() {
+        return keyword == null ? null : StringUtils.trimToNull(keyword);
+    }
 }
