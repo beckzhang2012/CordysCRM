@@ -9,8 +9,11 @@ import cn.cordys.common.constants.FormKey;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.domain.BaseModuleFieldValue;
 import cn.cordys.common.dto.*;
+import cn.cordys.common.exception.GenericException;
 import cn.cordys.common.pager.PageUtils;
 import cn.cordys.common.pager.PagerWithOption;
+import cn.cordys.common.response.result.CrmHttpResultCode;
+import cn.cordys.common.util.Translator;
 import cn.cordys.common.permission.PermissionCache;
 import cn.cordys.common.permission.PermissionUtils;
 import cn.cordys.common.service.BaseService;
@@ -18,6 +21,7 @@ import cn.cordys.common.service.DataScopeService;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.BeanUtils;
 import cn.cordys.crm.contract.constants.ContractPaymentPlanStatus;
+import cn.cordys.crm.contract.constants.ContractStage;
 import cn.cordys.crm.contract.domain.Contract;
 import cn.cordys.crm.contract.domain.ContractPaymentPlan;
 import cn.cordys.crm.contract.dto.request.ContractPaymentPlanAddRequest;
@@ -299,7 +303,14 @@ public class ContractPaymentPlanService {
         ContractPaymentPlan originContractPaymentPlan = contractPaymentPlanMapper.selectByPrimaryKey(id);
         dataScopeService.checkDataPermission(userId, orgId, originContractPaymentPlan.getOwner(), PermissionConstants.CUSTOMER_MANAGEMENT_DELETE);
 
+        if (ContractPaymentPlanStatus.COMPLETED.name().equals(originContractPaymentPlan.getPlanStatus())) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.payment.plan.completed.cannot.delete"));
+        }
+
         Contract contract = contractMapper.selectByPrimaryKey(originContractPaymentPlan.getContractId());
+        if (contract != null && ContractStage.ARCHIVED.name().equals(contract.getStage())) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.payment.plan.archived.contract.cannot.delete"));
+        }
 
         String resourceName = contract == null ? originContractPaymentPlan.getContractId() : contract.getName();
 
