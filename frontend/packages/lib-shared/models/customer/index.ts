@@ -361,3 +361,60 @@ export interface MergeAccountParams {
   toMergeId: string | null; // 合并目标客户id
   ownerId: string | null;
 }
+
+export interface MergeAccountPreviewParams {
+  mergeIds: string[]; // 合并客户ids
+  toMergeId: string; // 合并目标客户id
+}
+
+export interface MergeAccountPreviewResponse {
+  primaryCustomer: MergeCustomerInfo;
+  secondaryCustomers: MergeCustomerInfo[];
+  statistics: MergeStatistics;
+  conflictFields: MergeConflictField[];
+}
+
+export interface MergeCustomerInfo {
+  id: string;
+  name: string;
+  owner: string;
+  ownerName: string;
+  contactCount: number;
+  opportunityCount: number;
+  contractCount: number;
+  paymentPlanCount: number;
+  followRecordCount: number;
+  followPlanCount: number;
+}
+
+export interface MergeStatistics {
+  totalContacts: number;
+  totalOpportunities: number;
+  totalContracts: number;
+  totalPaymentPlans: number;
+  totalFollowRecords: number;
+  totalFollowPlans: number;
+}
+
+export interface MergeConflictField {
+  fieldName: string;
+  fieldLabel: string;
+  primaryValue: string;
+  secondaryValues: MergeSecondaryFieldValue[];
+  needSelection: boolean;
+}
+
+export interface MergeSecondaryFieldValue {
+  customerId: string;
+  customerName: string;
+  value: string;
+}
+
+export interface MergeFieldSelection {
+  fieldName: string;
+  selectedCustomerId: string;
+}
+
+export interface MergeAccountExecuteParams extends MergeAccountParams {
+  fieldSelections?: MergeFieldSelection[];
+}

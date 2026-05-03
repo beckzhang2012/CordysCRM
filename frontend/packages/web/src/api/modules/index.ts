@@ -259,6 +259,7 @@ export const {
   addCustomer,
   getCustomer,
   mergeAccount,
+  mergeAccountPreview,
   importAccount,
   importContact,
   updateCustomer,

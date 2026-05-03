@@ -337,4 +337,6 @@ export default {
   'common.approvedSuccess': 'Approval passed',
   'common.unApprovedSuccess': 'Approval not passed',
   'common.skipped': 'Skipped',
+  'common.nextStep': 'Next Step',
+  'common.prevStep': 'Previous Step',
 };
