@@ -15,6 +15,7 @@ import cn.cordys.common.dto.ResourceTabEnableDTO;
 import cn.cordys.common.dto.RolePermissionDTO;
 import cn.cordys.common.exception.GenericException;
 import cn.cordys.common.pager.PageUtils;
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.pager.PagerWithOption;
 import cn.cordys.common.permission.PermissionCache;
 import cn.cordys.common.permission.PermissionUtils;
@@ -122,7 +123,7 @@ public class FollowUpPlanService extends BaseFollowUpService {
             followUpPlanMapper.update(updateFollowUpPlan);
             baseService.handleUpdateLog(followUpPlan, updateFollowUpPlan, originCustomerFields, request.getModuleFields(), followUpPlan.getId(), Translator.get("update_follow_up_plan"));
         }, () -> {
-            throw new GenericException("plan_not_found");
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("plan_not_found"));
         });
         return followUpPlan;
     }
@@ -328,11 +329,18 @@ public class FollowUpPlanService extends BaseFollowUpService {
     public void cancelPlan(String id, String operator) {
         FollowUpPlan followUpPlan = followUpPlanMapper.selectByPrimaryKey(id);
         if (followUpPlan == null) {
-            throw new GenericException("plan_not_found");
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("plan_not_found"));
         }
-        //检查跟进计划是否可以取消,如果是已完成，并且已转记录的跟进计划，则不允许取消
-        if (followUpPlan.getStatus().equals(FollowUpPlanStatusType.COMPLETED.name()) && followUpPlan.getConverted()) {
-            return;
+        String currentStatus = followUpPlan.getStatus();
+        // 1. 已完结（已完成或已取消）的跟进计划，不允许再次取消
+        if (FollowUpPlanStatusType.COMPLETED.name().equals(currentStatus) ||
+            FollowUpPlanStatusType.CANCELLED.name().equals(currentStatus)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("plan_already_completed_or_cancelled"));
+        }
+        // 2. 取消跟进计划时，原状态只能是"未开始"或"进行中"
+        if (!FollowUpPlanStatusType.PREPARED.name().equals(currentStatus) &&
+            !FollowUpPlanStatusType.UNDERWAY.name().equals(currentStatus)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("invalid_status_for_cancel"));
         }
         FollowUpPlan plan = new FollowUpPlan();
         plan.setId(followUpPlan.getId());
@@ -353,7 +361,7 @@ public class FollowUpPlanService extends BaseFollowUpService {
     public void delete(String id) {
         FollowUpPlan followUpPlan = followUpPlanMapper.selectByPrimaryKey(id);
         if (followUpPlan == null) {
-            throw new GenericException("plan_not_found");
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("plan_not_found"));
         }
         deleteByIds(List.of(id));
 
@@ -369,20 +377,28 @@ public class FollowUpPlanService extends BaseFollowUpService {
      * @param userId
      */
     public void updateStatus(FollowUpPlanStatusRequest request, String userId) {
-        //检查跟进计划是否可以更新状态,如果是已完成，并且已转记录的跟进计划，则不允许更新状态
         FollowUpPlan followUpPlan = followUpPlanMapper.selectByPrimaryKey(request.getId());
         if (followUpPlan == null) {
-            throw new GenericException("plan_not_found");
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("plan_not_found"));
         }
-        if (followUpPlan.getStatus().equals(FollowUpPlanStatusType.COMPLETED.name()) && followUpPlan.getConverted()) {
-            return;
+        String currentStatus = followUpPlan.getStatus();
+        String targetStatus = request.getStatus();
+        // 1. 已完结（已完成或已取消）的跟进计划，不允许再次修改状态
+        if (FollowUpPlanStatusType.COMPLETED.name().equals(currentStatus) ||
+            FollowUpPlanStatusType.CANCELLED.name().equals(currentStatus)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("plan_already_completed_or_cancelled"));
         }
-        followUpPlan = new FollowUpPlan();
-        followUpPlan.setStatus(request.getStatus());
-        followUpPlan.setId(request.getId());
-        followUpPlan.setUpdateUser(userId);
-        followUpPlan.setUpdateTime(System.currentTimeMillis());
-        followUpPlanMapper.update(followUpPlan);
+        // 2. 想把状态改为"已完成"时，原状态必须是"进行中"
+        if (FollowUpPlanStatusType.COMPLETED.name().equals(targetStatus) &&
+            !FollowUpPlanStatusType.UNDERWAY.name().equals(currentStatus)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("invalid_status_for_complete"));
+        }
+        FollowUpPlan updatePlan = new FollowUpPlan();
+        updatePlan.setStatus(targetStatus);
+        updatePlan.setId(request.getId());
+        updatePlan.setUpdateUser(userId);
+        updatePlan.setUpdateTime(System.currentTimeMillis());
+        followUpPlanMapper.update(updatePlan);
     }
 
     public void deleteByCustomerIds(List<String> customerIds) {
