@@ -15,6 +15,7 @@ import cn.cordys.common.domain.BaseResourceSubField;
 import cn.cordys.common.dto.*;
 import cn.cordys.common.dto.chart.ChartResult;
 import cn.cordys.common.exception.GenericException;
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.pager.PageUtils;
 import cn.cordys.common.pager.PagerWithOption;
 import cn.cordys.common.permission.PermissionCache;
@@ -773,11 +774,20 @@ public class ClueService {
         checkTransformPermission(request.getOppCreated());
         Clue clue = clueMapper.selectByPrimaryKey(request.getClueId());
         if (clue == null) {
-            throw new GenericException(Translator.get("clue_not_exist"));
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("clue_not_exist"));
+        }
+        if (StringUtils.isNotBlank(clue.getTransitionId())) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("clue.already.converted"));
+        }
+        if (ClueStatus.SUCCESS.getKey().equals(clue.getStage()) || ClueStatus.FAIL.getKey().equals(clue.getStage())) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("clue.already.closed"));
+        }
+        if (BooleanUtils.isTrue(request.getOppCreated()) && StringUtils.isBlank(request.getOppName())) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("clue.opportunity.name.not.blank"));
         }
         List<String> owners = extUserMapper.selectUserNameByIds(List.of(clue.getOwner()));
         if (CollectionUtils.isEmpty(owners)) {
-            throw new GenericException(Translator.get("clue_owner_not_exist"));
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("clue_owner_not_exist"));
         }
 
         LambdaQueryWrapper<Customer> wrapper = new LambdaQueryWrapper<>();
