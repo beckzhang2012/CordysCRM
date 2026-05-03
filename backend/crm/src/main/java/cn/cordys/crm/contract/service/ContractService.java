@@ -12,6 +12,7 @@ import cn.cordys.common.domain.BaseModuleFieldValue;
 import cn.cordys.common.dto.*;
 import cn.cordys.common.exception.GenericException;
 import cn.cordys.common.pager.PageUtils;
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.pager.PagerWithOption;
 import cn.cordys.common.permission.PermissionCache;
 import cn.cordys.common.permission.PermissionUtils;
@@ -24,6 +25,7 @@ import cn.cordys.common.util.Translator;
 import cn.cordys.crm.contract.constants.ContractApprovalStatus;
 import cn.cordys.crm.contract.constants.ContractStage;
 import cn.cordys.crm.contract.domain.Contract;
+import cn.cordys.crm.contract.domain.ContractPaymentPlan;
 import cn.cordys.crm.contract.domain.ContractSnapshot;
 import cn.cordys.crm.contract.dto.request.*;
 import cn.cordys.crm.contract.dto.response.ContractListResponse;
@@ -93,6 +95,8 @@ public class ContractService {
     private SerialNumGenerator serialNumGenerator;
     @Resource
     private SqlSessionFactory sqlSessionFactory;
+    @Resource
+    private BaseMapper<ContractPaymentPlan> contractPaymentPlanMapper;
 
     private static final BigDecimal MAX_AMOUNT = new BigDecimal("9999999999");
 
@@ -324,6 +328,17 @@ public class ContractService {
         Contract contract = contractMapper.selectByPrimaryKey(id);
         if (contract == null) {
             throw new GenericException(Translator.get("contract.not.exist"));
+        }
+
+        if (ContractStage.ARCHIVED.name().equals(contract.getStage())) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.archived.cannot.delete"));
+        }
+
+        LambdaQueryWrapper<ContractPaymentPlan> paymentPlanWrapper = new LambdaQueryWrapper<>();
+        paymentPlanWrapper.eq(ContractPaymentPlan::getContractId, id);
+        List<ContractPaymentPlan> paymentPlans = contractPaymentPlanMapper.selectListByLambda(paymentPlanWrapper);
+        if (CollectionUtils.isNotEmpty(paymentPlans)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.has.payment.plan.cannot.delete"));
         }
 
         contractFieldService.deleteByResourceId(id);
