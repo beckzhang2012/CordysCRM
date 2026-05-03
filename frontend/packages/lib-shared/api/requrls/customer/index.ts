@@ -52,6 +52,7 @@ export const BatchUpdateAccountUrl = '/account/batch/update'; // 批量编辑客
 export const BatchUpdateContactUrl = '/account/contact/batch/update'; // 批量编辑联系人
 export const MergeAccountUrl = '/account/merge'; // 合并客户
 export const MergeAccountPageUrl = '/account/merge/page'; // 获取数据范围权限客户列表
+export const MergeAccountPreviewUrl = '/account/merge/preview'; // 合并客户预览
 export const GenerateCustomerChartUrl = '/account/chart'; // 生成客户图表
 export const generateCustomerContactChartUrl = '/account/contact/chart'; // 生成客户联系人图表
 
