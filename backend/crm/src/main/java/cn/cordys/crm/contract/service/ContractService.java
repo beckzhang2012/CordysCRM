@@ -11,6 +11,7 @@ import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.domain.BaseModuleFieldValue;
 import cn.cordys.common.dto.*;
 import cn.cordys.common.exception.GenericException;
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.pager.PageUtils;
 import cn.cordys.common.pager.PagerWithOption;
 import cn.cordys.common.permission.PermissionCache;
@@ -482,10 +483,34 @@ public class ContractService {
             throw new GenericException(Translator.get("contract.unapproved.cannot.edit"));
         }
 
+        String currentStage = contract.getStage();
+        String targetStage = request.getStage();
+
+        if (ContractStage.ARCHIVED.name().equals(currentStage)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.stage.cannot.change.after.void.or.archived"));
+        }
+
+        if (ContractStage.VOID.name().equals(currentStage) && !ContractStage.ARCHIVED.name().equals(targetStage)) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.stage.cannot.change.after.void.or.archived"));
+        }
+
+        if (ContractStage.VOID.name().equals(targetStage)) {
+            if (StringUtils.isBlank(request.getVoidReason())) {
+                throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.void.reason.required"));
+            }
+        }
+
+        if (ContractStage.ARCHIVED.name().equals(targetStage)) {
+            if (!ContractStage.COMPLETED_PERFORMANCE.name().equals(currentStage)
+                    && !ContractStage.VOID.name().equals(currentStage)) {
+                throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.archive.only.from.completed.or.void"));
+            }
+        }
+
         Map<String, String> oldMap = new HashMap<>();
         oldMap.put("contractStage", Translator.get("contract.stage." + contract.getStage().toLowerCase()));
 
-        contract.setStage(request.getStage());
+        contract.setStage(targetStage);
         if (StringUtils.isNotBlank(request.getVoidReason())) {
             contract.setVoidReason(request.getVoidReason());
         }
