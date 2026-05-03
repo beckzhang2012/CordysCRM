@@ -3,8 +3,13 @@ package cn.cordys.crm.contract;
 import cn.cordys.common.constants.InternalUser;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.pager.Pager;
+import cn.cordys.common.response.result.CrmHttpResultCode;
+import cn.cordys.common.uid.IDGenerator;
+import cn.cordys.common.util.Translator;
 import cn.cordys.crm.base.BaseTest;
 import cn.cordys.crm.contract.constants.ContractPaymentPlanStatus;
+import cn.cordys.crm.contract.constants.ContractStage;
+import cn.cordys.crm.contract.domain.Contract;
 import cn.cordys.crm.contract.domain.ContractPaymentPlan;
 import cn.cordys.crm.contract.dto.request.ContractPaymentPlanAddRequest;
 import cn.cordys.crm.contract.dto.request.ContractPaymentPlanPageRequest;
@@ -18,7 +23,9 @@ import org.junit.jupiter.api.*;
 import cn.cordys.common.util.BeanUtils;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,9 +38,14 @@ class ContractPaymentPlanControllerTests extends BaseTest {
     private static final String TAB = "tab";
 
     private static ContractPaymentPlan addContractPaymentPlan;
+    private static ContractPaymentPlan completedPlan;
+    private static Contract archivedContract;
+    private static ContractPaymentPlan planWithArchivedContract;
 
     @Resource
     private BaseMapper<ContractPaymentPlan> contractPaymentPlanMapper;
+    @Resource
+    private BaseMapper<Contract> contractMapper;
 
     @Override
     protected String getBasePath() {
@@ -137,7 +149,112 @@ class ContractPaymentPlanControllerTests extends BaseTest {
     }
 
     @Test
-    @Order(10)
+    @Order(5)
+    void testDeleteCompletedPlan_ShouldFail() throws Exception {
+        ContractPaymentPlanAddRequest request = new ContractPaymentPlanAddRequest();
+        request.setPlanAmount(BigDecimal.valueOf(999));
+        request.setOwner(InternalUser.ADMIN.getValue());
+        request.setPlanStatus(ContractPaymentPlanStatus.PENDING.name());
+        request.setContractId("test_completed");
+        MvcResult addMvcResult = this.requestPostWithOkAndReturn(DEFAULT_ADD, request);
+        ContractPaymentPlan resultData = getResultData(addMvcResult, ContractPaymentPlan.class);
+        completedPlan = contractPaymentPlanMapper.selectByPrimaryKey(resultData.getId());
+
+        completedPlan.setPlanStatus(ContractPaymentPlanStatus.COMPLETED.name());
+        contractPaymentPlanMapper.update(completedPlan);
+        completedPlan = contractPaymentPlanMapper.selectByPrimaryKey(completedPlan.getId());
+        Assertions.assertEquals(ContractPaymentPlanStatus.COMPLETED.name(), completedPlan.getPlanStatus());
+
+        ResultActions resultActions = this.requestGet(DEFAULT_DELETE, completedPlan.getId())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST.value()));
+        assertErrorCode(resultActions, CrmHttpResultCode.VALIDATE_FAILED);
+        MvcResult deleteMvcResult = resultActions.andReturn();
+        String responseContent = deleteMvcResult.getResponse().getContentAsString();
+        Assertions.assertTrue(responseContent.contains(Translator.get("contract.payment.plan.completed.cannot.delete")), "Response should contain completed plan cannot delete message");
+
+        ContractPaymentPlan stillExists = contractPaymentPlanMapper.selectByPrimaryKey(completedPlan.getId());
+        Assertions.assertNotNull(stillExists);
+    }
+
+    private static ContractPaymentPlan normalDeletePlan;
+
+    @Test
+    @Order(6)
+    void testDeleteNormalPlan_ShouldSuccess() throws Exception {
+        ContractPaymentPlanAddRequest request = new ContractPaymentPlanAddRequest();
+        request.setPlanAmount(BigDecimal.valueOf(777));
+        request.setOwner(InternalUser.ADMIN.getValue());
+        request.setPlanStatus(ContractPaymentPlanStatus.PENDING.name());
+        request.setContractId("test_normal_delete");
+        MvcResult mvcResult = this.requestPostWithOkAndReturn(DEFAULT_ADD, request);
+        ContractPaymentPlan resultData = getResultData(mvcResult, ContractPaymentPlan.class);
+        normalDeletePlan = contractPaymentPlanMapper.selectByPrimaryKey(resultData.getId());
+
+        Assertions.assertEquals(ContractPaymentPlanStatus.PENDING.name(), normalDeletePlan.getPlanStatus());
+
+        this.requestGetWithOk(DEFAULT_DELETE, normalDeletePlan.getId());
+
+        ContractPaymentPlan deletedPlan = contractPaymentPlanMapper.selectByPrimaryKey(normalDeletePlan.getId());
+        Assertions.assertNull(deletedPlan);
+    }
+
+    @Test
+    @Order(7)
+    void testDeletePlanWithArchivedContract_ShouldFail() throws Exception {
+        archivedContract = new Contract();
+        archivedContract.setId(IDGenerator.nextStr());
+        archivedContract.setName("Test Archived Contract");
+        archivedContract.setStage(ContractStage.ARCHIVED.name());
+        archivedContract.setOrganizationId(DEFAULT_ORGANIZATION_ID);
+        archivedContract.setCreateTime(System.currentTimeMillis());
+        archivedContract.setUpdateTime(System.currentTimeMillis());
+        archivedContract.setCreateUser(InternalUser.ADMIN.getValue());
+        archivedContract.setUpdateUser(InternalUser.ADMIN.getValue());
+        contractMapper.insert(archivedContract);
+
+        ContractPaymentPlanAddRequest request = new ContractPaymentPlanAddRequest();
+        request.setPlanAmount(BigDecimal.valueOf(888));
+        request.setOwner(InternalUser.ADMIN.getValue());
+        request.setPlanStatus(ContractPaymentPlanStatus.PENDING.name());
+        request.setContractId(archivedContract.getId());
+        MvcResult addMvcResult = this.requestPostWithOkAndReturn(DEFAULT_ADD, request);
+        ContractPaymentPlan resultData = getResultData(addMvcResult, ContractPaymentPlan.class);
+        planWithArchivedContract = contractPaymentPlanMapper.selectByPrimaryKey(resultData.getId());
+
+        ResultActions resultActions = this.requestGet(DEFAULT_DELETE, planWithArchivedContract.getId())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST.value()));
+        assertErrorCode(resultActions, CrmHttpResultCode.VALIDATE_FAILED);
+        MvcResult deleteMvcResult = resultActions.andReturn();
+        String responseContent = deleteMvcResult.getResponse().getContentAsString();
+        Assertions.assertTrue(responseContent.contains(Translator.get("contract.payment.plan.archived.contract.cannot.delete")), "Response should contain archived contract plan cannot delete message");
+
+        ContractPaymentPlan stillExists = contractPaymentPlanMapper.selectByPrimaryKey(planWithArchivedContract.getId());
+        Assertions.assertNotNull(stillExists);
+    }
+
+    @Test
+    @Order(8)
+    void testDeleteTestData() throws Exception {
+        if (completedPlan != null) {
+            completedPlan.setPlanStatus(ContractPaymentPlanStatus.PENDING.name());
+            contractPaymentPlanMapper.update(completedPlan);
+            this.requestGetWithOk(DEFAULT_DELETE, completedPlan.getId());
+        }
+        if (planWithArchivedContract != null) {
+            Contract contract = contractMapper.selectByPrimaryKey(archivedContract.getId());
+            if (contract != null) {
+                contract.setStage(ContractStage.IN_PROGRESS.name());
+                contractMapper.update(contract);
+            }
+            this.requestGetWithOk(DEFAULT_DELETE, planWithArchivedContract.getId());
+        }
+        if (archivedContract != null) {
+            contractMapper.deleteByPrimaryKey(archivedContract.getId());
+        }
+    }
+
+    @Test
+    @Order(9)
     void delete() throws Exception {
         this.requestGetWithOk(DEFAULT_DELETE, addContractPaymentPlan.getId());
         ContractPaymentPlan contractPaymentPlan = contractPaymentPlanMapper.selectByPrimaryKey(addContractPaymentPlan.getId());
