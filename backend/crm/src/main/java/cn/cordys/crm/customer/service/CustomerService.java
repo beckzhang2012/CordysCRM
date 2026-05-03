@@ -42,6 +42,7 @@ import cn.cordys.crm.customer.dto.response.CustomerMergePreviewResponse;
 import cn.cordys.crm.customer.mapper.ExtCustomerContactMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerPoolMapper;
+import cn.cordys.crm.customer.dto.request.CustomerMergeExecuteRequest;
 import cn.cordys.crm.follow.domain.FollowUpPlan;
 import cn.cordys.crm.follow.domain.FollowUpRecord;
 import cn.cordys.crm.follow.mapper.ExtFollowUpPlanMapper;
@@ -161,6 +162,8 @@ public class CustomerService {
     private BaseMapper<CustomerCollaboration> customerCollaborationMapper;
     @Resource
     private BaseMapper<CustomerContact> customerContactMapper;
+    @Resource
+    private CustomerMergeAuditService customerMergeAuditService;
 
     public PagerWithOption<List<CustomerListResponse>> list(CustomerPageRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -810,6 +813,51 @@ public class CustomerService {
             throw new GenericException(Translator.get("no.customer.merge.data"));
         }
 
+        List<Customer> secondaryCustomers = customerMapper.selectByIds(request.getMergeIds());
+        List<String> secondaryCustomerNames = secondaryCustomers.stream().map(Customer::getName).toList();
+
+        int contactCount = 0;
+        int opportunityCount = 0;
+        int contractCount = 0;
+        int paymentPlanCount = 0;
+        int followRecordCount = 0;
+        int followPlanCount = 0;
+
+        for (String customerId : request.getMergeIds()) {
+            CustomerMergeRequest countRequest = new CustomerMergeRequest();
+            countRequest.setMergeIds(List.of(customerId));
+            countRequest.setToMergeId(request.getToMergeId());
+
+            contactCount += extCustomerContactMapper.getMergeContactList(countRequest, currentOrgId).size();
+            opportunityCount += extOpportunityMapper.getMergeOpportunityList(countRequest, currentOrgId).size();
+            contractCount += extContractMapper.getMergeContractList(countRequest, currentOrgId).size();
+            paymentPlanCount += extContractMapper.countPaymentPlansByCustomerId(customerId, currentOrgId);
+            followRecordCount += extFollowUpRecordMapper.getMergeRecordList(countRequest, currentOrgId).size();
+            followPlanCount += extFollowUpPlanMapper.getMergePlanList(countRequest, currentOrgId).size();
+        }
+
+        CustomerMergeExecuteRequest auditRequest = new CustomerMergeExecuteRequest();
+        auditRequest.setMergeIds(request.getMergeIds());
+        auditRequest.setToMergeId(request.getToMergeId());
+        auditRequest.setOwnerId(request.getOwnerId());
+
+        String ownerName = null;
+        if (request.getOwnerId() != null) {
+            ownerName = baseService.getUserNameMap(List.of(request.getOwnerId())).get(request.getOwnerId());
+        }
+        String operatorName = baseService.getUserNameMap(List.of(currentUser)).get(currentUser);
+
+        cn.cordys.crm.customer.domain.CustomerMergeAudit audit = customerMergeAuditService.createAudit(
+                auditRequest,
+                oldCustomer.getName(),
+                secondaryCustomerNames,
+                ownerName,
+                currentUser,
+                operatorName,
+                currentOrgId
+        );
+        String auditId = audit.getId();
+
         // 批量合并产生的修改日志
         List<LogDTO> mergeLogs = getMergeRelateLogs(request, currentUser, currentOrgId);
         // 联系人需要排除重复项合并
@@ -867,6 +915,16 @@ public class CustomerService {
         if (!CollectionUtils.isEmpty(mergeLogs)) {
             logService.batchAdd(mergeLogs);
         }
+
+        customerMergeAuditService.updateAuditSuccess(
+                auditId,
+                contactCount,
+                opportunityCount,
+                contractCount,
+                paymentPlanCount,
+                followRecordCount,
+                followPlanCount
+        );
     }
 
     public List<ChartResult> chart(ChartAnalysisRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
