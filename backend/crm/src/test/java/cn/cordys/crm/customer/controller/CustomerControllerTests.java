@@ -15,6 +15,7 @@ import cn.cordys.common.util.Translator;
 import cn.cordys.crm.base.BaseTest;
 import cn.cordys.crm.customer.domain.Customer;
 import cn.cordys.crm.customer.domain.CustomerField;
+import cn.cordys.crm.customer.domain.CustomerMergeAudit;
 import cn.cordys.crm.customer.dto.request.*;
 import cn.cordys.crm.customer.dto.response.CustomerGetResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
@@ -60,6 +61,7 @@ class CustomerControllerTests extends BaseTest {
     protected static final String EXPORT_ALL = "export-all";
     protected static final String EXPORT_SELECT = "export-select";
     protected static final String MERGE = "merge";
+    protected static final String MERGE_PREVIEW = "merge/preview";
     protected static final String CHART = "chart";
     protected static final String CONTRACT_PAGE = "contract/page";
     protected static final String CONTRACT_PAYMENT_PLAN_PAGE = "contract/payment-plan/page";
@@ -80,6 +82,8 @@ class CustomerControllerTests extends BaseTest {
     private BaseMapper<ExportTask> exportTaskBaseMapper;
     @Resource
     private ExportTaskCenterService exportTaskCenterService;
+    @Resource
+    private BaseMapper<CustomerMergeAudit> customerMergeAuditMapper;
 
     @Override
     protected String getBasePath() {
@@ -509,6 +513,117 @@ class CustomerControllerTests extends BaseTest {
         this.requestPostWithOk(MERGE, mergeRequest);
         // check permission
         requestPostPermissionTest(PermissionConstants.CUSTOMER_MANAGEMENT_MERGE, MERGE, mergeRequest);
+    }
+
+    @Test
+    @Order(16)
+    void testMergePreview() throws Exception {
+        CustomerMergePreviewRequest previewRequest = new CustomerMergePreviewRequest();
+        previewRequest.setMergeIds(List.of("test-id-1", "test-id-2"));
+        previewRequest.setToMergeId("test-id-1");
+        MvcResult mvcResult = this.requestPost(MERGE_PREVIEW, previewRequest)
+                .andExpect(status().is5xxServerError())
+                .andReturn();
+        assert mvcResult.getResponse().getContentAsString().contains(Translator.get("no.customer.merge.data"));
+
+        CustomerAddRequest addRequest1 = new CustomerAddRequest();
+        addRequest1.setName("merge-customer-1");
+        addRequest1.setOwner("admin");
+        MvcResult addResult1 = this.requestPostWithOkAndReturn(DEFAULT_ADD, addRequest1);
+        Customer customer1 = getResultData(addResult1, Customer.class);
+
+        CustomerAddRequest addRequest2 = new CustomerAddRequest();
+        addRequest2.setName("merge-customer-2");
+        addRequest2.setOwner("admin");
+        MvcResult addResult2 = this.requestPostWithOkAndReturn(DEFAULT_ADD, addRequest2);
+        Customer customer2 = getResultData(addResult2, Customer.class);
+
+        previewRequest.setMergeIds(List.of(customer1.getId(), customer2.getId()));
+        previewRequest.setToMergeId(customer1.getId());
+        this.requestPostWithOk(MERGE_PREVIEW, previewRequest);
+
+        requestPostPermissionTest(PermissionConstants.CUSTOMER_MANAGEMENT_MERGE, MERGE_PREVIEW, previewRequest);
+    }
+
+    @Test
+    @Order(17)
+    void testMergeRollbackOnFailure() throws Exception {
+        CustomerMergeAudit auditExample = new CustomerMergeAudit();
+        auditExample.setOrganizationId(DEFAULT_ORGANIZATION_ID);
+        int auditCountBefore = customerMergeAuditMapper.select(auditExample).size();
+
+        CustomerAddRequest addRequest1 = new CustomerAddRequest();
+        addRequest1.setName("rollback-test-primary");
+        addRequest1.setOwner("admin");
+        MvcResult addResult1 = this.requestPostWithOkAndReturn(DEFAULT_ADD, addRequest1);
+        Customer primaryCustomer = getResultData(addResult1, Customer.class);
+
+        CustomerAddRequest addRequest2 = new CustomerAddRequest();
+        addRequest2.setName("rollback-test-secondary");
+        addRequest2.setOwner("admin");
+        MvcResult addResult2 = this.requestPostWithOkAndReturn(DEFAULT_ADD, addRequest2);
+        Customer secondaryCustomer = getResultData(addResult2, Customer.class);
+
+        CustomerMergeRequest invalidMergeRequest = new CustomerMergeRequest();
+        invalidMergeRequest.setMergeIds(List.of("non-existent-id"));
+        invalidMergeRequest.setToMergeId(primaryCustomer.getId());
+        invalidMergeRequest.setOwnerId("admin");
+
+        MvcResult mvcResult = this.requestPost(MERGE, invalidMergeRequest)
+                .andExpect(status().is5xxServerError())
+                .andReturn();
+
+        Customer foundPrimary = customerMapper.selectByPrimaryKey(primaryCustomer.getId());
+        Customer foundSecondary = customerMapper.selectByPrimaryKey(secondaryCustomer.getId());
+
+        Assertions.assertNotNull(foundPrimary, "Primary customer should still exist after failed merge");
+        Assertions.assertNotNull(foundSecondary, "Secondary customer should still exist after failed merge");
+        Assertions.assertEquals(primaryCustomer.getName(), foundPrimary.getName());
+        Assertions.assertEquals(secondaryCustomer.getName(), foundSecondary.getName());
+
+        int auditCountAfter = customerMergeAuditMapper.select(auditExample).size();
+        Assertions.assertEquals(auditCountBefore, auditCountAfter, "Audit count should not change after failed merge (transaction rollback)");
+    }
+
+    @Test
+    @Order(18)
+    void testMergeAuditCreated() throws Exception {
+        CustomerMergeAudit auditExample = new CustomerMergeAudit();
+        auditExample.setOrganizationId(DEFAULT_ORGANIZATION_ID);
+        int auditCountBefore = customerMergeAuditMapper.select(auditExample).size();
+
+        CustomerAddRequest addRequest1 = new CustomerAddRequest();
+        addRequest1.setName("audit-test-primary");
+        addRequest1.setOwner("admin");
+        MvcResult addResult1 = this.requestPostWithOkAndReturn(DEFAULT_ADD, addRequest1);
+        Customer primaryCustomer = getResultData(addResult1, Customer.class);
+
+        CustomerAddRequest addRequest2 = new CustomerAddRequest();
+        addRequest2.setName("audit-test-secondary");
+        addRequest2.setOwner("admin");
+        MvcResult addResult2 = this.requestPostWithOkAndReturn(DEFAULT_ADD, addRequest2);
+        Customer secondaryCustomer = getResultData(addResult2, Customer.class);
+
+        CustomerMergeRequest mergeRequest = new CustomerMergeRequest();
+        mergeRequest.setMergeIds(List.of(secondaryCustomer.getId()));
+        mergeRequest.setToMergeId(primaryCustomer.getId());
+        mergeRequest.setOwnerId("admin");
+
+        this.requestPostWithOk(MERGE, mergeRequest);
+
+        int auditCountAfter = customerMergeAuditMapper.select(auditExample).size();
+        Assertions.assertEquals(auditCountBefore + 1, auditCountAfter, "One audit record should be created after successful merge");
+
+        CustomerMergeAudit queryAudit = new CustomerMergeAudit();
+        queryAudit.setOrganizationId(DEFAULT_ORGANIZATION_ID);
+        queryAudit.setPrimaryCustomerId(primaryCustomer.getId());
+        List<CustomerMergeAudit> auditList = customerMergeAuditMapper.select(queryAudit);
+        CustomerMergeAudit createdAudit = auditList.isEmpty() ? null : auditList.getFirst();
+
+        Assertions.assertNotNull(createdAudit, "Audit record should exist");
+        Assertions.assertEquals("SUCCESS", createdAudit.getStatus(), "Audit status should be SUCCESS");
+        Assertions.assertEquals(primaryCustomer.getName(), createdAudit.getPrimaryCustomerName());
+        Assertions.assertTrue(createdAudit.getSecondaryCustomerNames().contains(secondaryCustomer.getName()));
     }
 
     private List<CustomerField> getCustomerFields(String customerId) {

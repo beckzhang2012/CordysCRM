@@ -1,13 +1,21 @@
 <template>
   <CrmModal
     v-model:show="showModal"
-    :title="t('customer.mergeAccount')"
+    :title="currentStep === 'select' ? t('customer.mergeAccount') : t('customer.mergePreview')"
     :ok-loading="loading"
-    :positive-text="t('customer.merge')"
+    :positive-text="currentStep === 'select' ? t('common.nextStep') : t('customer.merge')"
+    :negative-text="currentStep === 'select' ? t('common.cancel') : t('common.prevStep')"
     @confirm="confirmHandler"
     @cancel="cancelHandler"
   >
-    <n-form ref="formRef" :label-width="70" :model="form" label-placement="left" require-mark-placement="left">
+    <n-form
+      v-if="currentStep === 'select'"
+      ref="formRef"
+      :label-width="70"
+      :model="form"
+      label-placement="left"
+      require-mark-placement="left"
+    >
       <n-form-item path="selectedAccount" :label="t('customer.mergeTo')">
         <n-radio-group v-model:value="form.selectedAccount" name="radiogroup" @change="handleChange">
           <n-space>
@@ -85,20 +93,144 @@
         <div>{{ t('customer.afterMergeInfoTip') }}</div>
       </div>
     </n-form>
+
+    <div v-else-if="currentStep === 'preview'" class="merge-preview">
+      <div class="mb-[16px]">
+        <div class="text-[var(--text-n1)] font-medium mb-[8px]">{{ t('customer.mergeToCustomer') }}</div>
+        <n-card size="small" class="merge-customer-card">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[var(--primary-1)] font-medium">{{ previewData?.primaryCustomer?.name }}</span>
+              <span class="text-[var(--text-n3)] ml-[8px]">({{ t('common.head') }}: {{ previewData?.primaryCustomer?.ownerName || '-' }})</span>
+            </div>
+            <n-tag type="primary" size="small">{{ t('customer.primaryCustomer') }}</n-tag>
+          </div>
+        </n-card>
+      </div>
+
+      <div class="mb-[16px]">
+        <div class="text-[var(--text-n1)] font-medium mb-[8px]">{{ t('customer.secondaryCustomers') }}</div>
+        <n-card size="small" v-for="customer in previewData?.secondaryCustomers" :key="customer.id" class="merge-customer-card mb-[8px]">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[var(--text-n2)]">{{ customer.name }}</span>
+              <span class="text-[var(--text-n3)] ml-[8px]">({{ t('common.head') }}: {{ customer.ownerName || '-' }})</span>
+            </div>
+            <n-tag size="small">{{ t('customer.secondaryCustomer') }}</n-tag>
+          </div>
+        </n-card>
+      </div>
+
+      <div class="mb-[16px]">
+        <div class="text-[var(--text-n1)] font-medium mb-[8px]">{{ t('customer.mergeStatistics') }}</div>
+        <n-card size="small">
+          <n-grid :cols="3" :x-gap="16" :y-gap="12">
+            <n-gi>
+              <div class="text-[var(--text-n3)] text-[12px]">{{ t('customer.contactCount') }}</div>
+              <div class="text-[var(--text-n1)] font-medium">{{ previewData?.statistics?.totalContacts || 0 }}</div>
+            </n-gi>
+            <n-gi>
+              <div class="text-[var(--text-n3)] text-[12px]">{{ t('customer.opportunityCount') }}</div>
+              <div class="text-[var(--text-n1)] font-medium">{{ previewData?.statistics?.totalOpportunities || 0 }}</div>
+            </n-gi>
+            <n-gi>
+              <div class="text-[var(--text-n3)] text-[12px]">{{ t('customer.contractCount') }}</div>
+              <div class="text-[var(--text-n1)] font-medium">{{ previewData?.statistics?.totalContracts || 0 }}</div>
+            </n-gi>
+            <n-gi>
+              <div class="text-[var(--text-n3)] text-[12px]">{{ t('customer.paymentPlanCount') }}</div>
+              <div class="text-[var(--text-n1)] font-medium">{{ previewData?.statistics?.totalPaymentPlans || 0 }}</div>
+            </n-gi>
+            <n-gi>
+              <div class="text-[var(--text-n3)] text-[12px]">{{ t('customer.followRecordCount') }}</div>
+              <div class="text-[var(--text-n1)] font-medium">{{ previewData?.statistics?.totalFollowRecords || 0 }}</div>
+            </n-gi>
+            <n-gi>
+              <div class="text-[var(--text-n3)] text-[12px]">{{ t('customer.followPlanCount') }}</div>
+              <div class="text-[var(--text-n1)] font-medium">{{ previewData?.statistics?.totalFollowPlans || 0 }}</div>
+            </n-gi>
+          </n-grid>
+        </n-card>
+      </div>
+
+      <div v-if="previewData?.conflictFields?.length" class="mb-[16px]">
+        <div class="text-[var(--text-n1)] font-medium mb-[8px]">
+          {{ t('customer.conflictFields') }}
+          <n-tooltip trigger="hover" placement="right">
+            <template #trigger>
+              <CrmIcon
+                type="iconicon_help_circle"
+                :size="14"
+                class="cursor-pointer text-[var(--text-n4)] hover:text-[var(--primary-1)] ml-[4px]"
+              />
+            </template>
+            {{ t('customer.conflictFieldsTip') }}
+          </n-tooltip>
+        </div>
+        <n-card size="small">
+          <n-form :model="fieldSelections">
+            <n-form-item
+              v-for="field in previewData?.conflictFields"
+              :key="field.fieldName"
+              :label="field.fieldLabel"
+              :rule="[
+                {
+                  required: true,
+                  message: t('common.notNull', { value: field.fieldLabel }),
+                  trigger: ['blur', 'change'],
+                },
+              ]"
+            >
+              <n-radio-group v-model:value="fieldSelections[field.fieldName]">
+                <n-radio :value="previewData?.primaryCustomer?.id">
+                  {{ t('customer.primaryCustomerValue', { value: field.primaryValue || '-' }) }}
+                </n-radio>
+                <n-radio
+                  v-for="secondary in field.secondaryValues"
+                  :key="secondary.customerId"
+                  :value="secondary.customerId"
+                >
+                  {{ t('customer.secondaryCustomerValue', { name: secondary.customerName, value: secondary.value || '-' }) }}
+                </n-radio>
+              </n-radio-group>
+            </n-form-item>
+          </n-form>
+        </n-card>
+      </div>
+    </div>
   </CrmModal>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
-  import { FormInst, NForm, NFormItem, NRadio, NRadioGroup, NSelect, NSpace, NTooltip, useMessage } from 'naive-ui';
+  import { computed, ref, watch } from 'vue';
+  import {
+    FormInst,
+    NCard,
+    NForm,
+    NFormItem,
+    NGrid,
+    NGi,
+    NRadio,
+    NRadioGroup,
+    NSelect,
+    NSpace,
+    NTag,
+    NTooltip,
+    useMessage,
+  } from 'naive-ui';
   import { debounce } from 'lodash-es';
 
   import { useI18n } from '@lib/shared/hooks/useI18n';
-  import { MergeAccountParams } from '@lib/shared/models/customer';
+  import {
+    MergeAccountParams,
+    MergeAccountPreviewParams,
+    MergeAccountPreviewResponse,
+  } from '@lib/shared/models/customer';
 
   import CrmModal from '@/components/pure/crm-modal/index.vue';
+  import CrmIcon from '@/components/pure/crm-icon/index.vue';
 
-  import { mergeAccount, mergeAccountPage } from '@/api/modules';
+  import { mergeAccount, mergeAccountPage, mergeAccountPreview } from '@/api/modules';
 
   import { InternalRowData } from 'naive-ui/es/data-table/src/interface';
   import { SelectMixedOption } from 'naive-ui/es/select/src/interface';
@@ -119,6 +251,12 @@
     (e: 'saved'): void;
   }>();
 
+  type StepType = 'select' | 'preview';
+
+  const currentStep = ref<StepType>('select');
+  const previewData = ref<MergeAccountPreviewResponse | null>(null);
+  const fieldSelections = ref<Record<string, string>>({});
+
   const initForm: MergeAccountParams & {
     selectedAccount: string;
   } = {
@@ -130,35 +268,66 @@
 
   const form = ref({ ...initForm });
 
-  function cancelHandler() {
+  function resetForm() {
     form.value = { ...initForm };
-    showModal.value = false;
+    currentStep.value = 'select';
+    previewData.value = null;
+    fieldSelections.value = {};
+  }
+
+  function cancelHandler() {
+    if (currentStep.value === 'select') {
+      resetForm();
+      showModal.value = false;
+    } else {
+      currentStep.value = 'select';
+    }
   }
 
   const loading = ref(false);
   const formRef = ref<FormInst | null>(null);
-  function confirmHandler() {
-    formRef.value?.validate(async (error) => {
-      if (!error) {
-        try {
-          loading.value = true;
-          const { toMergeId, ownerId } = form.value;
-          await mergeAccount({
-            mergeIds: props.selectedRows.map((e) => e.id) as string[],
-            toMergeId,
-            ownerId,
-          });
-          Message.success(t('customer.mergeSuccess'));
-          emit('saved');
-          cancelHandler();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(e);
-        } finally {
-          loading.value = false;
+
+  async function confirmHandler() {
+    if (currentStep.value === 'select') {
+      formRef.value?.validate(async (error) => {
+        if (!error) {
+          try {
+            loading.value = true;
+            const { toMergeId } = form.value;
+            const result = await mergeAccountPreview({
+              mergeIds: props.selectedRows.map((e) => e.id) as string[],
+              toMergeId: toMergeId as string,
+            });
+            previewData.value = result;
+            currentStep.value = 'preview';
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log(e);
+          } finally {
+            loading.value = false;
+          }
         }
+      });
+    } else {
+      try {
+        loading.value = true;
+        const { toMergeId, ownerId } = form.value;
+        await mergeAccount({
+          mergeIds: props.selectedRows.map((e) => e.id) as string[],
+          toMergeId,
+          ownerId,
+        });
+        Message.success(t('customer.mergeSuccess'));
+        emit('saved');
+        resetForm();
+        showModal.value = false;
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log(e);
+      } finally {
+        loading.value = false;
       }
-    });
+    }
   }
 
   const otherAccountList = ref<SelectMixedOption[]>([]);
@@ -303,5 +472,16 @@
     border: 1px solid var(--primary-8);
     border-radius: 6px;
     background: var(--primary-7);
+  }
+
+  .merge-preview {
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .merge-customer-card {
+    :deep(.n-card__content) {
+      padding: 12px 16px;
+    }
   }
 </style>

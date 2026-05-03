@@ -31,11 +31,18 @@ import cn.cordys.common.utils.ConditionFilterUtils;
 import cn.cordys.crm.customer.constants.CustomerResultCode;
 import cn.cordys.crm.customer.domain.*;
 import cn.cordys.crm.customer.dto.request.*;
+import cn.cordys.crm.contract.domain.Contract;
+import cn.cordys.crm.contract.mapper.ExtContractMapper;
+import cn.cordys.crm.contract.mapper.ExtContractPaymentPlanMapper;
+import cn.cordys.crm.customer.dto.request.CustomerMergeExecuteRequest;
+import cn.cordys.crm.customer.dto.request.CustomerMergePreviewRequest;
 import cn.cordys.crm.customer.dto.response.CustomerGetResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
+import cn.cordys.crm.customer.dto.response.CustomerMergePreviewResponse;
 import cn.cordys.crm.customer.mapper.ExtCustomerContactMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerPoolMapper;
+import cn.cordys.crm.customer.dto.request.CustomerMergeExecuteRequest;
 import cn.cordys.crm.follow.domain.FollowUpPlan;
 import cn.cordys.crm.follow.domain.FollowUpRecord;
 import cn.cordys.crm.follow.mapper.ExtFollowUpPlanMapper;
@@ -150,9 +157,13 @@ public class CustomerService {
     @Resource
     private ExtFollowUpPlanMapper extFollowUpPlanMapper;
     @Resource
+    private ExtContractMapper extContractMapper;
+    @Resource
     private BaseMapper<CustomerCollaboration> customerCollaborationMapper;
     @Resource
     private BaseMapper<CustomerContact> customerContactMapper;
+    @Resource
+    private CustomerMergeAuditService customerMergeAuditService;
 
     public PagerWithOption<List<CustomerListResponse>> list(CustomerPageRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -802,6 +813,51 @@ public class CustomerService {
             throw new GenericException(Translator.get("no.customer.merge.data"));
         }
 
+        List<Customer> secondaryCustomers = customerMapper.selectByIds(request.getMergeIds());
+        List<String> secondaryCustomerNames = secondaryCustomers.stream().map(Customer::getName).toList();
+
+        int contactCount = 0;
+        int opportunityCount = 0;
+        int contractCount = 0;
+        int paymentPlanCount = 0;
+        int followRecordCount = 0;
+        int followPlanCount = 0;
+
+        for (String customerId : request.getMergeIds()) {
+            CustomerMergeRequest countRequest = new CustomerMergeRequest();
+            countRequest.setMergeIds(List.of(customerId));
+            countRequest.setToMergeId(request.getToMergeId());
+
+            contactCount += extCustomerContactMapper.getMergeContactList(countRequest, currentOrgId).size();
+            opportunityCount += extOpportunityMapper.getMergeOpportunityList(countRequest, currentOrgId).size();
+            contractCount += extContractMapper.getMergeContractList(countRequest, currentOrgId).size();
+            paymentPlanCount += extContractMapper.countPaymentPlansByCustomerId(customerId, currentOrgId);
+            followRecordCount += extFollowUpRecordMapper.getMergeRecordList(countRequest, currentOrgId).size();
+            followPlanCount += extFollowUpPlanMapper.getMergePlanList(countRequest, currentOrgId).size();
+        }
+
+        CustomerMergeExecuteRequest auditRequest = new CustomerMergeExecuteRequest();
+        auditRequest.setMergeIds(request.getMergeIds());
+        auditRequest.setToMergeId(request.getToMergeId());
+        auditRequest.setOwnerId(request.getOwnerId());
+
+        String ownerName = null;
+        if (request.getOwnerId() != null) {
+            ownerName = baseService.getUserNameMap(List.of(request.getOwnerId())).get(request.getOwnerId());
+        }
+        String operatorName = baseService.getUserNameMap(List.of(currentUser)).get(currentUser);
+
+        cn.cordys.crm.customer.domain.CustomerMergeAudit audit = customerMergeAuditService.createAudit(
+                auditRequest,
+                oldCustomer.getName(),
+                secondaryCustomerNames,
+                ownerName,
+                currentUser,
+                operatorName,
+                currentOrgId
+        );
+        String auditId = audit.getId();
+
         // 批量合并产生的修改日志
         List<LogDTO> mergeLogs = getMergeRelateLogs(request, currentUser, currentOrgId);
         // 联系人需要排除重复项合并
@@ -819,6 +875,7 @@ public class CustomerService {
         }
         extCustomerContactMapper.batchMerge(request, currentUser, currentOrgId, names, phones);
         extOpportunityMapper.batchMerge(request, currentUser, currentOrgId);
+        extContractMapper.batchMerge(request, currentUser, currentOrgId);
         extFollowUpRecordMapper.batchMerge(request, currentUser, currentOrgId);
         extFollowUpPlanMapper.batchMerge(request, currentUser, currentOrgId);
 
@@ -858,6 +915,16 @@ public class CustomerService {
         if (!CollectionUtils.isEmpty(mergeLogs)) {
             logService.batchAdd(mergeLogs);
         }
+
+        customerMergeAuditService.updateAuditSuccess(
+                auditId,
+                contactCount,
+                opportunityCount,
+                contractCount,
+                paymentPlanCount,
+                followRecordCount,
+                followPlanCount
+        );
     }
 
     public List<ChartResult> chart(ChartAnalysisRequest request, String userId, String orgId, DeptDataPermissionDTO deptDataPermission) {
@@ -986,5 +1053,123 @@ public class CustomerService {
         }
 
         return logs;
+    }
+
+    public CustomerMergePreviewResponse mergePreview(CustomerMergePreviewRequest request, String currentUser, String currentOrgId) {
+        request.getMergeIds().remove(request.getToMergeId());
+        Customer primaryCustomer = customerMapper.selectByPrimaryKey(request.getToMergeId());
+        if (CollectionUtils.isEmpty(request.getMergeIds()) || primaryCustomer == null) {
+            throw new GenericException(Translator.get("no.customer.merge.data"));
+        }
+
+        List<Customer> secondaryCustomers = customerMapper.selectByIds(request.getMergeIds());
+        if (secondaryCustomers.isEmpty()) {
+            throw new GenericException(Translator.get("no.customer.merge.data"));
+        }
+
+        CustomerMergePreviewResponse response = new CustomerMergePreviewResponse();
+
+        CustomerMergePreviewResponse.CustomerMergeInfo primaryInfo = buildCustomerMergeInfo(primaryCustomer, request, currentOrgId);
+        response.setPrimaryCustomer(primaryInfo);
+
+        List<CustomerMergePreviewResponse.CustomerMergeInfo> secondaryInfos = secondaryCustomers.stream()
+                .map(customer -> buildCustomerMergeInfo(customer, request, currentOrgId))
+                .toList();
+        response.setSecondaryCustomers(secondaryInfos);
+
+        CustomerMergePreviewResponse.MergeStatistics statistics = new CustomerMergePreviewResponse.MergeStatistics();
+        statistics.setTotalContacts(secondaryInfos.stream().mapToInt(CustomerMergePreviewResponse.CustomerMergeInfo::getContactCount).sum());
+        statistics.setTotalOpportunities(secondaryInfos.stream().mapToInt(CustomerMergePreviewResponse.CustomerMergeInfo::getOpportunityCount).sum());
+        statistics.setTotalContracts(secondaryInfos.stream().mapToInt(CustomerMergePreviewResponse.CustomerMergeInfo::getContractCount).sum());
+        statistics.setTotalPaymentPlans(secondaryInfos.stream().mapToInt(CustomerMergePreviewResponse.CustomerMergeInfo::getPaymentPlanCount).sum());
+        statistics.setTotalFollowRecords(secondaryInfos.stream().mapToInt(CustomerMergePreviewResponse.CustomerMergeInfo::getFollowRecordCount).sum());
+        statistics.setTotalFollowPlans(secondaryInfos.stream().mapToInt(CustomerMergePreviewResponse.CustomerMergeInfo::getFollowPlanCount).sum());
+        response.setStatistics(statistics);
+
+        List<CustomerMergePreviewResponse.MergeConflictField> conflictFields = detectConflictFields(primaryCustomer, secondaryCustomers);
+        response.setConflictFields(conflictFields);
+
+        return response;
+    }
+
+    private CustomerMergePreviewResponse.CustomerMergeInfo buildCustomerMergeInfo(
+            Customer customer,
+            CustomerMergePreviewRequest request,
+            String orgId
+    ) {
+        CustomerMergePreviewResponse.CustomerMergeInfo info = new CustomerMergePreviewResponse.CustomerMergeInfo();
+        info.setId(customer.getId());
+        info.setName(customer.getName());
+        info.setOwner(customer.getOwner());
+        if (customer.getOwner() != null) {
+            info.setOwnerName(baseService.getUserNameMap(List.of(customer.getOwner())).get(customer.getOwner()));
+        }
+
+        CustomerMergeRequest countRequest = new CustomerMergeRequest();
+        countRequest.setMergeIds(List.of(customer.getId()));
+        countRequest.setToMergeId(request.getToMergeId());
+
+        info.setContactCount(extCustomerContactMapper.getMergeContactList(countRequest, orgId).size());
+        info.setOpportunityCount(extOpportunityMapper.getMergeOpportunityList(countRequest, orgId).size());
+        info.setContractCount(extContractMapper.getMergeContractList(countRequest, orgId).size());
+        info.setFollowRecordCount(extFollowUpRecordMapper.getMergeRecordList(countRequest, orgId).size());
+        info.setFollowPlanCount(extFollowUpPlanMapper.getMergePlanList(countRequest, orgId).size());
+        info.setPaymentPlanCount(extContractMapper.countPaymentPlansByCustomerId(customer.getId(), orgId));
+
+        return info;
+    }
+
+    private List<CustomerMergePreviewResponse.MergeConflictField> detectConflictFields(
+            Customer primaryCustomer,
+            List<Customer> secondaryCustomers
+    ) {
+        List<CustomerMergePreviewResponse.MergeConflictField> conflictFields = new ArrayList<>();
+
+        checkFieldConflict("owner", "负责人", primaryCustomer, secondaryCustomers, conflictFields);
+        checkFieldConflict("follower", "最新跟进人", primaryCustomer, secondaryCustomers, conflictFields);
+
+        return conflictFields;
+    }
+
+    private void checkFieldConflict(
+            String fieldName,
+            String fieldLabel,
+            Customer primaryCustomer,
+            List<Customer> secondaryCustomers,
+            List<CustomerMergePreviewResponse.MergeConflictField> conflictFields
+    ) {
+        Object primaryValue = getFieldValue(primaryCustomer, fieldName);
+        boolean hasConflict = false;
+        List<CustomerMergePreviewResponse.SecondaryFieldValue> secondaryValues = new ArrayList<>();
+
+        for (Customer secondary : secondaryCustomers) {
+            Object secondaryValue = getFieldValue(secondary, fieldName);
+            if (!Objects.equals(primaryValue, secondaryValue)) {
+                hasConflict = true;
+            }
+            CustomerMergePreviewResponse.SecondaryFieldValue value = new CustomerMergePreviewResponse.SecondaryFieldValue();
+            value.setCustomerId(secondary.getId());
+            value.setCustomerName(secondary.getName());
+            value.setValue(secondaryValue != null ? secondaryValue.toString() : null);
+            secondaryValues.add(value);
+        }
+
+        if (hasConflict) {
+            CustomerMergePreviewResponse.MergeConflictField conflict = new CustomerMergePreviewResponse.MergeConflictField();
+            conflict.setFieldName(fieldName);
+            conflict.setFieldLabel(fieldLabel);
+            conflict.setPrimaryValue(primaryValue != null ? primaryValue.toString() : null);
+            conflict.setSecondaryValues(secondaryValues);
+            conflict.setNeedSelection(true);
+            conflictFields.add(conflict);
+        }
+    }
+
+    private Object getFieldValue(Customer customer, String fieldName) {
+        return switch (fieldName) {
+            case "owner" -> customer.getOwner();
+            case "follower" -> customer.getFollower();
+            default -> null;
+        };
     }
 }

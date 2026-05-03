@@ -21,6 +21,7 @@ import cn.cordys.crm.customer.domain.Customer;
 import cn.cordys.crm.customer.dto.request.*;
 import cn.cordys.crm.customer.dto.response.CustomerGetResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
+import cn.cordys.crm.customer.dto.response.CustomerMergePreviewResponse;
 import cn.cordys.crm.customer.service.CustomerExportService;
 import cn.cordys.crm.customer.service.CustomerService;
 import cn.cordys.crm.opportunity.dto.response.OpportunityListResponse;
@@ -233,6 +234,13 @@ public class CustomerController {
     @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_MERGE)
     public void merge(@Valid @RequestBody CustomerMergeRequest request) {
         customerService.merge(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+    }
+
+    @PostMapping("/merge/preview")
+    @Operation(summary = "合并客户预览")
+    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_MERGE)
+    public CustomerMergePreviewResponse mergePreview(@Valid @RequestBody CustomerMergePreviewRequest request) {
+        return customerService.mergePreview(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/chart")
