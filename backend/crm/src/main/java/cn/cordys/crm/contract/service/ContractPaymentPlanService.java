@@ -9,14 +9,17 @@ import cn.cordys.common.constants.FormKey;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.domain.BaseModuleFieldValue;
 import cn.cordys.common.dto.*;
+import cn.cordys.common.exception.GenericException;
 import cn.cordys.common.pager.PageUtils;
 import cn.cordys.common.pager.PagerWithOption;
 import cn.cordys.common.permission.PermissionCache;
 import cn.cordys.common.permission.PermissionUtils;
+import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.service.BaseService;
 import cn.cordys.common.service.DataScopeService;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.BeanUtils;
+import cn.cordys.common.util.Translator;
 import cn.cordys.crm.contract.constants.ContractPaymentPlanStatus;
 import cn.cordys.crm.contract.domain.Contract;
 import cn.cordys.crm.contract.domain.ContractPaymentPlan;
@@ -33,6 +36,7 @@ import cn.cordys.crm.system.notice.CommonNoticeSendService;
 import cn.cordys.crm.system.service.ModuleFormCacheService;
 import cn.cordys.crm.system.service.ModuleFormService;
 import cn.cordys.mybatis.BaseMapper;
+import cn.cordys.mybatis.lambda.LambdaQueryWrapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
@@ -42,6 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -216,6 +221,8 @@ public class ContractPaymentPlanService {
 
     @OperationLog(module = LogModule.CONTRACT_PAYMENT, type = LogType.ADD)
     public ContractPaymentPlan add(ContractPaymentPlanAddRequest request, String userId, String orgId) {
+        validatePlanAmountForAdd(request);
+
         ContractPaymentPlan contractPaymentPlan = BeanUtils.copyBean(new ContractPaymentPlan(), request);
         if (StringUtils.isBlank(request.getOwner())) {
             contractPaymentPlan.setOwner(userId);
@@ -254,6 +261,8 @@ public class ContractPaymentPlanService {
     public ContractPaymentPlan update(ContractPaymentPlanUpdateRequest request, String userId, String orgId) {
         ContractPaymentPlan originContractPaymentPlan = contractPaymentPlanMapper.selectByPrimaryKey(request.getId());
         dataScopeService.checkDataPermission(userId, orgId, originContractPaymentPlan.getOwner(), PermissionConstants.CONTRACT_PAYMENT_PLAN_UPDATE);
+
+        validatePlanAmountForUpdate(request, originContractPaymentPlan);
 
         ContractPaymentPlan contractPaymentPlan = BeanUtils.copyBean(new ContractPaymentPlan(), request);
         contractPaymentPlan.setUpdateTime(System.currentTimeMillis());
@@ -320,5 +329,73 @@ public class ContractPaymentPlanService {
 
     public CustomerPaymentPlanStatisticResponse calculateCustomerPaymentPlanStatisticByCustomerId(String accountId, String userId, String organizationId, DeptDataPermissionDTO deptDataPermission) {
         return extContractPaymentPlanMapper.calculateCustomerPaymentPlanStatisticByCustomerId(accountId, userId, organizationId, deptDataPermission);
+    }
+
+    private void validatePlanAmountForAdd(ContractPaymentPlanAddRequest request) {
+        if (request.getPlanAmount() == null || request.getPlanAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.payment_plan.amount.positive"));
+        }
+
+        String contractId = request.getContractId();
+        if (StringUtils.isBlank(contractId)) {
+            return;
+        }
+
+        Contract contract = contractMapper.selectByPrimaryKey(contractId);
+        if (contract == null || contract.getAmount() == null) {
+            return;
+        }
+
+        BigDecimal existingTotal = calculateTotalPlanAmountExcludingId(contractId, null);
+        BigDecimal newTotal = existingTotal.add(request.getPlanAmount());
+
+        if (newTotal.compareTo(contract.getAmount()) > 0) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.payment_plan.amount.exceed"));
+        }
+    }
+
+    private void validatePlanAmountForUpdate(ContractPaymentPlanUpdateRequest request, ContractPaymentPlan originPlan) {
+        if (request.getPlanAmount() != null && request.getPlanAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.payment_plan.amount.positive"));
+        }
+
+        BigDecimal newPlanAmount = request.getPlanAmount();
+        if (newPlanAmount == null) {
+            newPlanAmount = originPlan.getPlanAmount();
+        }
+
+        String contractId = originPlan.getContractId();
+        if (StringUtils.isBlank(contractId)) {
+            return;
+        }
+
+        Contract contract = contractMapper.selectByPrimaryKey(contractId);
+        if (contract == null || contract.getAmount() == null) {
+            return;
+        }
+
+        BigDecimal existingTotal = calculateTotalPlanAmountExcludingId(contractId, originPlan.getId());
+        BigDecimal newTotal = existingTotal.add(newPlanAmount);
+
+        if (newTotal.compareTo(contract.getAmount()) > 0) {
+            throw new GenericException(CrmHttpResultCode.VALIDATE_FAILED, Translator.get("contract.payment_plan.amount.exceed"));
+        }
+    }
+
+    private BigDecimal calculateTotalPlanAmountExcludingId(String contractId, String excludePlanId) {
+        LambdaQueryWrapper<ContractPaymentPlan> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ContractPaymentPlan::getContractId, contractId);
+        if (StringUtils.isNotBlank(excludePlanId)) {
+            wrapper.ne(ContractPaymentPlan::getId, excludePlanId);
+        }
+
+        List<ContractPaymentPlan> plans = contractPaymentPlanMapper.selectListByLambda(wrapper);
+        if (CollectionUtils.isEmpty(plans)) {
+            return BigDecimal.ZERO;
+        }
+
+        return plans.stream()
+                .map(plan -> plan.getPlanAmount() == null ? BigDecimal.ZERO : plan.getPlanAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
