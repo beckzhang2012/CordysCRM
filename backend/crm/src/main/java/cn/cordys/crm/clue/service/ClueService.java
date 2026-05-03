@@ -775,6 +775,15 @@ public class ClueService {
         if (clue == null) {
             throw new GenericException(Translator.get("clue_not_exist"));
         }
+        if (StringUtils.isNotBlank(clue.getTransitionId())) {
+            throw new GenericException(Translator.get("clue.already.converted"));
+        }
+        if (ClueStatus.SUCCESS.getKey().equals(clue.getStage()) || ClueStatus.FAIL.getKey().equals(clue.getStage())) {
+            throw new GenericException(Translator.get("clue.already.closed"));
+        }
+        if (BooleanUtils.isTrue(request.getOppCreated()) && StringUtils.isBlank(request.getOppName())) {
+            throw new GenericException(Translator.get("clue.opportunity.name.not.blank"));
+        }
         List<String> owners = extUserMapper.selectUserNameByIds(List.of(clue.getOwner()));
         if (CollectionUtils.isEmpty(owners)) {
             throw new GenericException(Translator.get("clue_owner_not_exist"));
